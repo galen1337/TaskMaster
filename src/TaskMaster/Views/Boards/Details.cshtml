@@ -1,0 +1,24 @@
+@model Domain.Entities.Board
+
+<h2>@Model.Name</h2>
+<p>Project: <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId">@Model.Project.Name</a></p>
+
+<div class="row">
+	@foreach (var col in Model.Columns.OrderBy(c => c.Order))
+	{
+		<div class="col-md-3">
+			<div class="card mb-3">
+				<div class="card-header">@col.Name</div>
+				<ul class="list-group list-group-flush">
+					@foreach (var card in Model.Cards.Where(c => c.ColumnId == col.Id).OrderBy(c => c.Priority))
+					{
+						<li class="list-group-item">
+							<div class="fw-bold">@card.Title</div>
+							<div class="text-muted small">@card.Priority</div>
+						</li>
+					}
+				</ul>
+			</div>
+		</div>
+	}
+</div> 

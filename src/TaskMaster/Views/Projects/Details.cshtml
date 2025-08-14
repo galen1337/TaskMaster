@@ -1,0 +1,48 @@
+@model Domain.Entities.Project
+
+<h2>@Model.Name (@Model.Key)</h2>
+<p>@Model.Description</p>
+
+<h4>Boards</h4>
+@if (Model.Boards.Any())
+{
+	<ul class="list-group mb-3">
+	@foreach (var b in Model.Boards.OrderBy(x => x.Name))
+	{
+		<li class="list-group-item d-flex justify-content-between align-items-center">
+			<span>@b.Name</span>
+			<a class="btn btn-sm btn-outline-primary" asp-controller="Boards" asp-action="Details" asp-route-id="@b.Id">Open</a>
+		</li>
+	}
+	</ul>
+}
+else
+{
+	<p>No boards yet.</p>
+}
+
+<h4>Members</h4>
+@if (Model.Members.Any())
+{
+	<table class="table table-sm">
+		<thead>
+			<tr>
+				<th>User</th>
+				<th>Role</th>
+			</tr>
+		</thead>
+		<tbody>
+		@foreach (var m in Model.Members)
+		{
+			<tr>
+				<td>@m.User.Email</td>
+				<td>@m.Role</td>
+			</tr>
+		}
+		</tbody>
+	</table>
+}
+else
+{
+	<p>No members yet.</p>
+} 

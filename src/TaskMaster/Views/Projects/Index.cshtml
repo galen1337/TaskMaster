@@ -1,0 +1,29 @@
+@model IEnumerable<Domain.Entities.Project>
+
+<h2>Projects</h2>
+<p>
+	<a class="btn btn-primary" asp-action="Create">Create Project</a>
+</p>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Key</th>
+			<th>Created</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+	@foreach (var p in Model)
+	{
+		<tr>
+			<td>@p.Name</td>
+			<td>@p.Key</td>
+			<td>@p.CreatedAt.ToLocalTime().ToString("g")</td>
+			<td>
+				<a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@p.Id">Open</a>
+			</td>
+		</tr>
+	}
+	</tbody>
+</table> 

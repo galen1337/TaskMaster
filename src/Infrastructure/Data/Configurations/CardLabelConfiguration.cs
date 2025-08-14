@@ -19,6 +19,6 @@ public class CardLabelConfiguration : IEntityTypeConfiguration<CardLabel>
         builder.HasOne(cl => cl.Label)
             .WithMany(l => l.CardLabels)
             .HasForeignKey(cl => cl.LabelId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 } 

@@ -1,19 +1,18 @@
 using System.Security.Claims;
-using Infrastructure.Data;
+using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace TaskMaster.Controllers;
 
 [Authorize]
 public class BoardsController : Controller
 {
-	private readonly ApplicationDbContext _context;
+	private readonly IBoardService _boardService;
 
-	public BoardsController(ApplicationDbContext context)
+	public BoardsController(IBoardService boardService)
 	{
-		_context = context;
+		_boardService = boardService;
 	}
 
 	public async Task<IActionResult> Details(int id)
@@ -21,21 +20,40 @@ public class BoardsController : Controller
 		string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (string.IsNullOrEmpty(userId)) return Challenge();
 
-		var board = await _context.Boards
-			.Include(b => b.Project)
-			.Include(b => b.Columns)
-			.Include(b => b.Cards)
-			.FirstOrDefaultAsync(b => b.Id == id);
-		if (board == null) return NotFound();
-
-		// Minimal membership check via project membership
-		bool isMember = await _context.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == userId);
 		bool isAdmin = User.IsInRole("Admin");
-		if (!isMember && !isAdmin && board.IsPrivate)
-		{
-			return Forbid();
-		}
+		var board = await _boardService.GetBoardDetailsAsync(id, userId, isAdmin);
+		if (board == null) return Forbid();
 
 		return View(board);
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Create(int projectId, CreateBoardDto dto)
+	{
+		string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(userId)) return Challenge();
+
+		try
+		{
+			bool isAdmin = User.IsInRole("Admin");
+			var board = await _boardService.CreateBoardAsync(projectId, userId, isAdmin, dto);
+			TempData["Success"] = "Board created.";
+			return RedirectToAction("Details", "Projects", new { id = board.ProjectId });
+		}
+		catch (UnauthorizedAccessException)
+		{
+			TempData["Error"] = "You are not allowed to create a board for this project.";
+		}
+		catch (ArgumentException ex)
+		{
+			TempData["Error"] = ex.Message;
+		}
+		catch (Exception)
+		{
+			TempData["Error"] = "Failed to create board.";
+		}
+
+		return RedirectToAction("Details", "Projects", new { id = projectId });
 	}
 } 

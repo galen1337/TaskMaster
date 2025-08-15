@@ -46,44 +46,82 @@
 	</div>
 </form>
 
-<div class="row">
+<style>
+	.kanban-column { background: #f8f9fb; border-radius: 12px; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+	.kanban-column .column-header { font-weight: 600; font-size: .9rem; color: #506176; display: flex; align-items: center; justify-content: space-between; margin: 6px 6px 10px; }
+	.kanban-list { min-height: 40px; }
+	.kanban-card { border: 1px solid #e6e9ef; border-radius: 10px; padding: 10px; margin: 8px 6px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); cursor: grab; }
+	.kanban-card .title { font-weight: 600; color: #1f2937; }
+	.kanban-card .meta { color:#6b7280; font-size:.8rem; }
+	.avatar { width:24px; height:24px; border-radius:50%; background:#e5e7eb; display:inline-flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:600; color:#374151; }
+	.drag-ghost { opacity: .4; }
+</style>
+
+<div class="row" id="board" data-board-id="@Model.Id">
 	@foreach (var col in Model.Columns.OrderBy(c => c.Order))
 	{
-		<div class="col-md-3">
-			<div class="card mb-3">
-				<div class="card-header">@col.Name</div>
-				<ul class="list-group list-group-flush">
+		<div class="col-md-4">
+			<div class="kanban-column">
+				<div class="column-header">@col.Name</div>
+				<ul class="list-unstyled kanban-list" data-column-id="@col.Id">
 					@foreach (var card in Model.Cards.Where(c => c.ColumnId == col.Id).OrderBy(c => c.Priority))
 					{
-						<li class="list-group-item">
-							<div class="fw-bold">@card.Title</div>
-							<div class="text-muted small">@card.Priority</div>
-							<a class="btn btn-sm btn-link p-0" asp-controller="Cards" asp-action="Details" asp-route-id="@card.Id">Details</a>
-							<form asp-controller="Cards" asp-action="Assign" method="post" class="d-flex gap-2 mt-2">
-								<input type="hidden" name="id" value="@card.Id" />
-								<select name="userId" class="form-select form-select-sm" style="max-width: 200px;">
-									<option value="">Unassigned</option>
-									@foreach (var m in Model.Project.Members)
-									{
-										<option value="@m.UserId" selected="@(card.AssigneeId == m.UserId)">@m.User.Email</option>
-									}
-								</select>
-								<button type="submit" class="btn btn-sm btn-outline-secondary">Assign</button>
-							</form>
-							<form asp-controller="Cards" asp-action="Move" method="post" class="d-flex gap-2 mt-2">
-								<input type="hidden" name="id" value="@card.Id" />
-								<select name="targetColumnId" class="form-select form-select-sm" style="max-width: 200px;">
-									@foreach (var c in Model.Columns.OrderBy(x => x.Order))
-									{
-										<option value="@c.Id" selected="@(c.Id == col.Id)">@c.Name</option>
-									}
-								</select>
-								<button type="submit" class="btn btn-sm btn-outline-primary">Move</button>
-							</form>
+						<li class="kanban-card" data-card-id="@card.Id">
+							<div class="d-flex justify-content-between align-items-start">
+								<div class="title">@card.Title</div>
+								<a class="btn btn-sm btn-link p-0" href="#" data-card-details="@card.Id">Details</a>
+							</div>
+							<div class="meta d-flex align-items-center gap-2">
+								<span>@card.Priority</span>
+								@if (!string.IsNullOrEmpty(card.Assignee?.Email))
+								{
+									<span class="avatar" title="@card.Assignee.Email">@card.Assignee.Email.Substring(0,1).ToUpper()</span>
+									<span>@card.Assignee.Email</span>
+								}
+								else { <span>Unassigned</span>; }
+							</div>
 						</li>
 					}
 				</ul>
 			</div>
 		</div>
 	}
-</div> 
+</div>
+
+@section Scripts{
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+	<script>
+		(function(){
+			const lists = document.querySelectorAll('.kanban-list');
+			lists.forEach(list => {
+				new Sortable(list, {
+					group: 'kanban',
+					animation: 150,
+					dragClass: 'dragging',
+					ghostClass: 'drag-ghost',
+					onEnd: async (evt) => {
+						const cardId = evt.item.getAttribute('data-card-id');
+						const newColumnId = evt.to.getAttribute('data-column-id');
+						try {
+							const res = await fetch('/Cards/Move', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With':'XMLHttpRequest' },
+								body: `id=${encodeURIComponent(cardId)}&targetColumnId=${encodeURIComponent(newColumnId)}&__RequestVerificationToken=${encodeURIComponent(getToken())}`
+							});
+							if (!res.ok) throw new Error('Move failed');
+						} catch (e) {
+							alert('Could not move card.');
+							location.reload();
+						}
+					}
+				});
+			});
+			function getToken(){
+				const el = document.querySelector('input[name="__RequestVerificationToken"]');
+				if(el) return el.value;
+				const any = document.querySelector('form input[name="__RequestVerificationToken"]');
+				return any ? any.value : '';
+			}
+		})();
+	</script>
+} 

@@ -19,8 +19,11 @@ public class BoardService : IBoardService
 	{
 		var board = await _db.Boards
 			.Include(b => b.Project)
+				.ThenInclude(p => p.Members)
+					.ThenInclude(pm => pm.User)
 			.Include(b => b.Columns)
 			.Include(b => b.Cards)
+				.ThenInclude(c => c.Assignee)
 			.FirstOrDefaultAsync(b => b.Id == boardId);
 		if (board == null) return null;
 

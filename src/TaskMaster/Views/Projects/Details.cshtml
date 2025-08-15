@@ -63,6 +63,7 @@ else
 			<tr>
 				<th>User</th>
 				<th>Role</th>
+				<th>Change</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -71,6 +72,18 @@ else
 			<tr>
 				<td>@m.User.Email</td>
 				<td>@m.Role</td>
+				<td>
+					<form asp-controller="Projects" asp-action="ChangeRole" method="post" class="d-flex gap-2">
+						<input type="hidden" name="projectId" value="@Model.Id" />
+						<input type="hidden" name="userId" value="@m.UserId" />
+						<select name="role" class="form-select form-select-sm" style="max-width: 160px;">
+							<option value="Owner" selected="@(m.Role == Domain.Enums.ProjectRole.Owner)">Owner</option>
+							<option value="Admin" selected="@(m.Role == Domain.Enums.ProjectRole.Admin)">Admin</option>
+							<option value="Member" selected="@(m.Role == Domain.Enums.ProjectRole.Member)">Member</option>
+						</select>
+						<button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+					</form>
+				</td>
 			</tr>
 		}
 		</tbody>

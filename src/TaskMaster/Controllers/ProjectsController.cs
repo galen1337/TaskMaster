@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskMaster.Models;
+using Application.Services;
+using Domain.Enums;
 
 namespace TaskMaster.Controllers;
 
@@ -14,11 +16,13 @@ public class ProjectsController : Controller
 {
 	private readonly ApplicationDbContext _context;
 	private readonly UserManager<ApplicationUser> _userManager;
+	private readonly IProjectService _projectService;
 
-	public ProjectsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+	public ProjectsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IProjectService projectService)
 	{
 		_context = context;
 		_userManager = userManager;
+		_projectService = projectService;
 	}
 
 	public async Task<IActionResult> Index()
@@ -126,5 +130,24 @@ public class ProjectsController : Controller
 		
 		// If no letters at all, use default
 		return "PROJ";
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> ChangeRole(int projectId, string userId, ProjectRole role)
+	{
+		string? actingUserId = _userManager.GetUserId(User);
+		if (string.IsNullOrEmpty(actingUserId)) return Challenge();
+		try
+		{
+			bool isAdmin = User.IsInRole("Admin");
+			await _projectService.ChangeMemberRoleAsync(projectId, userId, role, actingUserId, isAdmin);
+			TempData["Success"] = "Role updated.";
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+		}
+		return RedirectToAction(nameof(Details), new { id = projectId });
 	}
 } 

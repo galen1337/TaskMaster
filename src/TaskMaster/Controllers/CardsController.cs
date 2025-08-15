@@ -86,4 +86,55 @@ public class CardsController : Controller
 			return RedirectToAction("Index", "Projects");
 		}
 	}
+
+	[HttpGet]
+	public async Task<IActionResult> Details(int id)
+	{
+		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+		bool isAdmin = User.IsInRole("Admin");
+		var dto = await _cardService.GetDetailsAsync(id, currentUserId, isAdmin);
+		if (dto == null) return Forbid();
+		return PartialView("_CardDetails", dto);
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Edit(int id, string title, string? description, Priority priority)
+	{
+		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+		bool isAdmin = User.IsInRole("Admin");
+		try
+		{
+			int boardId = await _cardService.UpdateAsync(id, title, description, priority, currentUserId, isAdmin);
+			TempData["Success"] = "Card updated.";
+			return RedirectToAction("Details", "Boards", new { id = boardId });
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+			return RedirectToAction("Index", "Projects");
+		}
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Delete(int id)
+	{
+		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+		bool isAdmin = User.IsInRole("Admin");
+		try
+		{
+			int boardId = await _cardService.DeleteAsync(id, currentUserId, isAdmin);
+			TempData["Success"] = "Card deleted.";
+			return RedirectToAction("Details", "Boards", new { id = boardId });
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+			return RedirectToAction("Index", "Projects");
+		}
+	}
 } 

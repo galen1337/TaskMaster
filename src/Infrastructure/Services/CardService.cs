@@ -22,13 +22,14 @@ public class CardService : ICardService
 
 		// Verify assignee is a member of the project
 		var projectId = await _db.Boards.Where(b => b.Id == card.BoardId).Select(b => b.ProjectId).FirstAsync();
-		bool currentUserIsProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
+		bool currentUserIsBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == card.BoardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
+		bool currentUserIsProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
 		bool assigneeIsProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == assigneeUserId);
 		if (!assigneeIsProjectMember)
 			throw new ArgumentException("Assignee must be a member of the project.");
 
-		// Authorization: member of project or platform admin can assign
-		if (!currentUserIsProjectMember && !isPlatformAdmin)
+		// Authorization: board admin, project Owner/Admin, or platform admin can assign
+		if (!currentUserIsBoardAdmin && !currentUserIsProjectOwnerOrAdmin && !isPlatformAdmin)
 			throw new UnauthorizedAccessException("Not allowed to assign this card.");
 
 		card.AssigneeId = assigneeUserId;
@@ -101,6 +102,50 @@ public class CardService : ICardService
 
 		card.ColumnId = targetColumnId;
 		card.UpdatedAt = DateTime.UtcNow;
+		await _db.SaveChangesAsync();
+		return boardId;
+	}
+
+	public async Task<CardDto?> GetDetailsAsync(int cardId, string currentUserId, bool isPlatformAdmin)
+	{
+		var card = await _db.Cards.FirstOrDefaultAsync(c => c.Id == cardId);
+		if (card == null) return null;
+		int boardId = card.BoardId;
+		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
+		bool isBoardMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId);
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!isBoardMember && !isProjectOwnerOrAdmin && !isPlatformAdmin) return null;
+		return new CardDto(card.Id, card.BoardId, card.ColumnId, card.Title, card.Description, card.Priority, card.AssigneeId);
+	}
+
+	public async Task<int> UpdateAsync(int cardId, string title, string? description, Priority priority, string currentUserId, bool isPlatformAdmin)
+	{
+		if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title required", nameof(title));
+		var card = await _db.Cards.FirstOrDefaultAsync(c => c.Id == cardId);
+		if (card == null) throw new KeyNotFoundException("Card not found");
+		int boardId = card.BoardId;
+		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
+		bool isBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!isBoardAdmin && !isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to edit this card.");
+		card.Title = title.Trim();
+		card.Description = string.IsNullOrWhiteSpace(description) ? null : description;
+		card.Priority = priority;
+		card.UpdatedAt = DateTime.UtcNow;
+		await _db.SaveChangesAsync();
+		return boardId;
+	}
+
+	public async Task<int> DeleteAsync(int cardId, string currentUserId, bool isPlatformAdmin)
+	{
+		var card = await _db.Cards.FirstOrDefaultAsync(c => c.Id == cardId);
+		if (card == null) throw new KeyNotFoundException("Card not found");
+		int boardId = card.BoardId;
+		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
+		bool isBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!isBoardAdmin && !isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to delete this card.");
+		_db.Cards.Remove(card);
 		await _db.SaveChangesAsync();
 		return boardId;
 	}

@@ -58,6 +58,7 @@
 						<li class="list-group-item">
 							<div class="fw-bold">@card.Title</div>
 							<div class="text-muted small">@card.Priority</div>
+							<a class="btn btn-sm btn-link p-0" asp-controller="Cards" asp-action="Details" asp-route-id="@card.Id">Details</a>
 							<form asp-controller="Cards" asp-action="Assign" method="post" class="d-flex gap-2 mt-2">
 								<input type="hidden" name="id" value="@card.Id" />
 								<select name="userId" class="form-select form-select-sm" style="max-width: 200px;">

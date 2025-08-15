@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Application.Services;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,5 +44,46 @@ public class CardsController : Controller
 		}
 
 		return RedirectToAction("Index", "Projects");
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Create(int boardId, int columnId, string title, string? description, Priority priority, string? assigneeId)
+	{
+		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+
+		try
+		{
+			bool isAdmin = User.IsInRole("Admin");
+			int targetBoardId = await _cardService.CreateAsync(boardId, columnId, title, description, priority, assigneeId, currentUserId, isAdmin);
+			TempData["Success"] = "Card created.";
+			return RedirectToAction("Details", "Boards", new { id = targetBoardId });
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+			return RedirectToAction("Details", "Boards", new { id = boardId });
+		}
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Move(int id, int targetColumnId)
+	{
+		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
+
+		try
+		{
+			bool isAdmin = User.IsInRole("Admin");
+			int boardId = await _cardService.MoveAsync(id, targetColumnId, currentUserId, isAdmin);
+			return RedirectToAction("Details", "Boards", new { id = boardId });
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+			return RedirectToAction("Index", "Projects");
+		}
 	}
 } 

@@ -3,6 +3,41 @@
 <h2>@Model.Name</h2>
 <p>Project: <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId">@Model.Project.Name</a></p>
 
+<form asp-controller="Cards" asp-action="Create" method="post" class="row g-2 mb-3">
+	<input type="hidden" name="boardId" value="@Model.Id" />
+	<div class="col-md-3">
+		<select name="columnId" class="form-select" required>
+			@foreach (var c in Model.Columns.OrderBy(x => x.Order))
+			{
+				<option value="@c.Id">@c.Name</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-3">
+		<input type="text" name="title" class="form-control" placeholder="New card title" required />
+	</div>
+	<div class="col-md-3">
+		<select name="priority" class="form-select">
+			@foreach (var p in Enum.GetValues(typeof(Domain.Enums.Priority)).Cast<Domain.Enums.Priority>())
+			{
+				<option value="@p">@p</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-2">
+		<select name="assigneeId" class="form-select">
+			<option value="">Unassigned</option>
+			@foreach (var m in Model.Project.Members)
+			{
+				<option value="@m.UserId">@m.User.Email</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-1">
+		<button type="submit" class="btn btn-primary w-100">Add</button>
+	</div>
+</form>
+
 <div class="row">
 	@foreach (var col in Model.Columns.OrderBy(c => c.Order))
 	{
@@ -25,6 +60,16 @@
 									}
 								</select>
 								<button type="submit" class="btn btn-sm btn-outline-secondary">Assign</button>
+							</form>
+							<form asp-controller="Cards" asp-action="Move" method="post" class="d-flex gap-2 mt-2">
+								<input type="hidden" name="id" value="@card.Id" />
+								<select name="targetColumnId" class="form-select form-select-sm" style="max-width: 200px;">
+									@foreach (var c in Model.Columns.OrderBy(x => x.Order))
+									{
+										<option value="@c.Id" selected="@(c.Id == col.Id)">@c.Name</option>
+									}
+								</select>
+								<button type="submit" class="btn btn-sm btn-outline-primary">Move</button>
 							</form>
 						</li>
 					}

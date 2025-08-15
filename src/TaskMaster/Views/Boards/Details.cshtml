@@ -12,7 +12,7 @@
 }
 
 <div class="mb-3">
-	<button class="btn btn-primary" id="openCreateCard">Add card +</button>
+	<button class="btn btn-primary" id="openCreateCard" data-board-id="@Model.Id">Add card +</button>
 </div>
 
 <style>
@@ -92,24 +92,23 @@
 				return any ? any.value : '';
 			}
 
-			// Add card modal
-			document.getElementById('openCreateCard')?.addEventListener('click', async () => {
-				const modalEl = (function(){
-					let m = document.getElementById('cardDetailsModal');
-					if (!m) {
-						const html = `<div class="modal fade" id="cardDetailsModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Create Card</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"></div></div></div></div>`;
-						document.body.insertAdjacentHTML('beforeend', html);
-						m = document.getElementById('cardDetailsModal');
-					}
-					return m;
-				})();
-				const modal = new bootstrap.Modal(modalEl);
-				modal.show();
+			// Add card modal via AJAX
+			document.getElementById('openCreateCard')?.addEventListener('click', async (e) => {
+				e.preventDefault();
+				const boardId = e.currentTarget.getAttribute('data-board-id');
+				let modalEl = document.getElementById('cardDetailsModal');
+				if (!modalEl) {
+					const html = `<div class=\"modal fade\" id=\"cardDetailsModal\" tabindex=\"-1\" aria-hidden=\"true\"><div class=\"modal-dialog modal-lg modal-dialog-centered\"><div class=\"modal-content\"><div class=\"modal-header\"><h5 class=\"modal-title\">Create Card</h5><button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\" aria-label=\"Close\"></button></div><div class=\"modal-body\"></div></div></div></div>`;
+					document.body.insertAdjacentHTML('beforeend', html);
+					modalEl = document.getElementById('cardDetailsModal');
+				}
+				const modal = new bootstrap.Modal(modalEl); modal.show();
 				const body = modalEl.querySelector('.modal-body');
 				body.innerHTML = '<div class="text-center py-5">Loading…</div>';
 				try {
-					// Build a minimal model payload via inline render
-					body.innerHTML = `@Html.Raw(System.Text.Encodings.Web.HtmlEncoder.Default.Encode(await Html.PartialAsync("~/Views/Cards/_CardCreate.cshtml", (Model.Id, Model.Columns.ToList(), Model.Project.Members.Select(m => new Application.Services.UserOption(m.UserId, m.User.Email)).ToList())).RenderToString()))`;
+					const res = await fetch(`/Cards/CreateForm?boardId=${boardId}`, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+					const html = await res.text();
+					body.innerHTML = html;
 				} catch { body.innerHTML = '<div class="alert alert-danger">Failed to load form.</div>'; }
 			});
 		})();

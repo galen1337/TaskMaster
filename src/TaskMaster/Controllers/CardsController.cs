@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Application.Services;
 using Domain.Enums;
+using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +11,24 @@ namespace TaskMaster.Controllers;
 public class CardsController : Controller
 {
 	private readonly ICardService _cardService;
+	private readonly IBoardService _boardService;
 
-	public CardsController(ICardService cardService)
+	public CardsController(ICardService cardService, IBoardService boardService)
 	{
 		_cardService = cardService;
+		_boardService = boardService;
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> CreateForm(int boardId)
+	{
+		string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(userId)) return Challenge();
+		bool isAdmin = User.IsInRole("Admin");
+		var board = await _boardService.GetBoardDetailsAsync(boardId, userId, isAdmin);
+		if (board == null) return Forbid();
+		var assignees = board.Project.Members.Select(m => new UserOption(m.UserId, m.User.Email)).ToList();
+		return PartialView("~/Views/Cards/_CardCreate.cshtml", (board.Id, board.Columns.ToList(), assignees));
 	}
 
 	[HttpPost]
@@ -27,19 +42,23 @@ public class CardsController : Controller
 		{
 			bool isAdmin = User.IsInRole("Admin");
 			int boardId = await _cardService.AssignAsync(id, userId, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
 			TempData["Success"] = "Card assigned.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (UnauthorizedAccessException)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Forbid();
 			TempData["Error"] = "You are not allowed to assign this card.";
 		}
 		catch (ArgumentException ex)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
 		}
 		catch (Exception)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return StatusCode(500);
 			TempData["Error"] = "Failed to assign card.";
 		}
 
@@ -78,10 +97,12 @@ public class CardsController : Controller
 		{
 			bool isAdmin = User.IsInRole("Admin");
 			int boardId = await _cardService.MoveAsync(id, targetColumnId, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (Exception ex)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
 			return RedirectToAction("Index", "Projects");
 		}
@@ -95,7 +116,9 @@ public class CardsController : Controller
 		bool isAdmin = User.IsInRole("Admin");
 		var dto = await _cardService.GetDetailsAsync(id, currentUserId, isAdmin);
 		if (dto == null) return Forbid();
-		return PartialView("_CardDetails", dto);
+		if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+			return PartialView("_CardDetails", dto);
+		return View("_CardDetails", dto);
 	}
 
 	[HttpPost]
@@ -108,11 +131,13 @@ public class CardsController : Controller
 		try
 		{
 			int boardId = await _cardService.UpdateAsync(id, title, description, priority, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
 			TempData["Success"] = "Card updated.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (Exception ex)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
 			return RedirectToAction("Index", "Projects");
 		}
@@ -128,11 +153,13 @@ public class CardsController : Controller
 		try
 		{
 			int boardId = await _cardService.DeleteAsync(id, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
 			TempData["Success"] = "Card deleted.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (Exception ex)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
 			return RedirectToAction("Index", "Projects");
 		}

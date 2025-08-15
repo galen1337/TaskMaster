@@ -1,0 +1,38 @@
+@model (int BoardId, IReadOnlyList<Domain.Entities.Column> Columns, IReadOnlyList<Application.Services.UserOption> Assignees)
+
+<form asp-controller="Cards" asp-action="Create" method="post">
+	<input type="hidden" name="boardId" value="@Model.BoardId" />
+	<div class="mb-2">
+		<label class="form-label">Column</label>
+		<select name="columnId" class="form-select">
+			@foreach (var c in Model.Columns.OrderBy(x => x.Order))
+			{
+				<option value="@c.Id">@c.Name</option>
+			}
+		</select>
+	</div>
+	<div class="mb-2">
+		<label class="form-label">Title</label>
+		<input name="title" class="form-control" placeholder="New card title" required />
+	</div>
+	<div class="mb-2">
+		<label class="form-label">Priority</label>
+		<select name="priority" class="form-select">
+			@foreach (var p in Enum.GetValues(typeof(Domain.Enums.Priority)).Cast<Domain.Enums.Priority>())
+			{
+				<option value="@p">@p</option>
+			}
+		</select>
+	</div>
+	<div class="mb-2">
+		<label class="form-label">Assignee</label>
+		<select name="assigneeId" class="form-select">
+			<option value="">Unassigned</option>
+			@foreach (var u in Model.Assignees)
+			{
+				<option value="@u.UserId">@u.Email</option>
+			}
+		</select>
+	</div>
+	<button type="submit" class="btn btn-primary">Create</button>
+</form> 

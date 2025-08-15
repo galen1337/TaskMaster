@@ -11,40 +11,9 @@
 	<div class="alert alert-danger">@e</div>
 }
 
-<form asp-controller="Cards" asp-action="Create" method="post" class="row g-2 mb-3">
-	<input type="hidden" name="boardId" value="@Model.Id" />
-	<div class="col-md-3">
-		<select name="columnId" class="form-select" required>
-			@foreach (var c in Model.Columns.OrderBy(x => x.Order))
-			{
-				<option value="@c.Id">@c.Name</option>
-			}
-		</select>
-	</div>
-	<div class="col-md-3">
-		<input type="text" name="title" class="form-control" placeholder="New card title" required />
-	</div>
-	<div class="col-md-3">
-		<select name="priority" class="form-select">
-			@foreach (var p in Enum.GetValues(typeof(Domain.Enums.Priority)).Cast<Domain.Enums.Priority>())
-			{
-				<option value="@p">@p</option>
-			}
-		</select>
-	</div>
-	<div class="col-md-2">
-		<select name="assigneeId" class="form-select">
-			<option value="">Unassigned</option>
-			@foreach (var m in Model.Project.Members)
-			{
-				<option value="@m.UserId">@m.User.Email</option>
-			}
-		</select>
-	</div>
-	<div class="col-md-1">
-		<button type="submit" class="btn btn-primary w-100">Add</button>
-	</div>
-</form>
+<div class="mb-3">
+	<button class="btn btn-primary" id="openCreateCard">Add card +</button>
+</div>
 
 <style>
 	.kanban-column { background: #f8f9fb; border-radius: 12px; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
@@ -122,6 +91,27 @@
 				const any = document.querySelector('form input[name="__RequestVerificationToken"]');
 				return any ? any.value : '';
 			}
+
+			// Add card modal
+			document.getElementById('openCreateCard')?.addEventListener('click', async () => {
+				const modalEl = (function(){
+					let m = document.getElementById('cardDetailsModal');
+					if (!m) {
+						const html = `<div class="modal fade" id="cardDetailsModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Create Card</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"></div></div></div></div>`;
+						document.body.insertAdjacentHTML('beforeend', html);
+						m = document.getElementById('cardDetailsModal');
+					}
+					return m;
+				})();
+				const modal = new bootstrap.Modal(modalEl);
+				modal.show();
+				const body = modalEl.querySelector('.modal-body');
+				body.innerHTML = '<div class="text-center py-5">Loading…</div>';
+				try {
+					// Build a minimal model payload via inline render
+					body.innerHTML = `@Html.Raw(System.Text.Encodings.Web.HtmlEncoder.Default.Encode(await Html.PartialAsync("~/Views/Cards/_CardCreate.cshtml", (Model.Id, Model.Columns.ToList(), Model.Project.Members.Select(m => new Application.Services.UserOption(m.UserId, m.User.Email)).ToList())).RenderToString()))`;
+				} catch { body.innerHTML = '<div class="alert alert-danger">Failed to load form.</div>'; }
+			});
 		})();
 	</script>
 } 

@@ -108,14 +108,20 @@ public class CardService : ICardService
 
 	public async Task<CardDto?> GetDetailsAsync(int cardId, string currentUserId, bool isPlatformAdmin)
 	{
-		var card = await _db.Cards.FirstOrDefaultAsync(c => c.Id == cardId);
+		var card = await _db.Cards.Include(c => c.Assignee).FirstOrDefaultAsync(c => c.Id == cardId);
 		if (card == null) return null;
 		int boardId = card.BoardId;
 		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
 		bool isBoardMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId);
-		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
-		if (!isBoardMember && !isProjectOwnerOrAdmin && !isPlatformAdmin) return null;
-		return new CardDto(card.Id, card.BoardId, card.ColumnId, card.Title, card.Description, card.Priority, card.AssigneeId);
+		bool isProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId);
+		if (!isBoardMember && !isProjectMember && !isPlatformAdmin) return null;
+
+		var options = await _db.ProjectMembers
+			.Where(pm => pm.ProjectId == board.ProjectId)
+			.Select(pm => new UserOption(pm.UserId, pm.User.Email))
+			.ToListAsync();
+
+		return new CardDto(card.Id, card.BoardId, card.ColumnId, card.Title, card.Description, card.Priority, card.AssigneeId, options);
 	}
 
 	public async Task<int> UpdateAsync(int cardId, string title, string? description, Priority priority, string currentUserId, bool isPlatformAdmin)

@@ -12,4 +12,5 @@ public interface ICardService
 	Task<int> DeleteAsync(int cardId, string currentUserId, bool isPlatformAdmin);
 }
 
-public record CardDto(int Id, int BoardId, int ColumnId, string Title, string? Description, Priority Priority, string? AssigneeId); 
+public record UserOption(string UserId, string Email);
+public record CardDto(int Id, int BoardId, int ColumnId, string Title, string? Description, Priority Priority, string? AssigneeId, IReadOnlyList<UserOption> Assignees); 

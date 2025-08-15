@@ -57,8 +57,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Projects}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
+
+// Add specific route for root to redirect to Projects
+app.MapGet("/", async context =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        context.Response.Redirect("/Projects");
+    }
+    else
+    {
+        context.Response.Redirect("/Identity/Account/Login");
+    }
+});
 
 app.Run();
 

@@ -15,6 +15,17 @@
 						<li class="list-group-item">
 							<div class="fw-bold">@card.Title</div>
 							<div class="text-muted small">@card.Priority</div>
+							<form asp-controller="Cards" asp-action="Assign" method="post" class="d-flex gap-2 mt-2">
+								<input type="hidden" name="id" value="@card.Id" />
+								<select name="userId" class="form-select form-select-sm" style="max-width: 200px;">
+									<option value="">Unassigned</option>
+									@foreach (var m in Model.Project.Members)
+									{
+										<option value="@m.UserId" selected="@(card.AssigneeId == m.UserId)">@m.User.Email</option>
+									}
+								</select>
+								<button type="submit" class="btn btn-sm btn-outline-secondary">Assign</button>
+							</form>
 						</li>
 					}
 				</ul>

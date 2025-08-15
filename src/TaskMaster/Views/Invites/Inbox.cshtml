@@ -1,0 +1,33 @@
+@model IReadOnlyList<Domain.Entities.Invite>
+
+<h2>Invites</h2>
+@if (!Model.Any())
+{
+	<p>No pending invites.</p>
+}
+else
+{
+	<table class="table table-sm">
+		<thead>
+			<tr>
+				<th>Project</th>
+				<th>Invited By</th>
+				<th>Expires</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+		@foreach (var i in Model)
+		{
+			<tr>
+				<td>@i.ProjectId</td>
+				<td>@i.InvitedByUserId</td>
+				<td>@i.ExpiresAt.ToLocalTime().ToString("g")</td>
+				<td>
+					<a class="btn btn-sm btn-success" asp-controller="Invites" asp-action="Accept" asp-route-token="@i.Token">Accept</a>
+				</td>
+			</tr>
+		}
+		</tbody>
+	</table>
+} 

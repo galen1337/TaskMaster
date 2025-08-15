@@ -36,6 +36,12 @@
 					<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">Projects</a>
 				}
 			</li>
+			@if (User.Identity?.IsAuthenticated ?? false)
+			{
+				<li class="nav-item">
+					<a class="nav-link text-dark" asp-controller="Invites" asp-action="Inbox">Inbox</a>
+				</li>
+			}
 			<li class="nav-item">
 				<a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
 			</li>

@@ -3,6 +3,26 @@
 <h2>@Model.Name (@Model.Key)</h2>
 <p>@Model.Description</p>
 
+@if (TempData["Success"] is string s)
+{
+	<div class="alert alert-success">@s</div>
+}
+@if (TempData["Error"] is string e)
+{
+	<div class="alert alert-danger">@e</div>
+}
+
+<h4>Invite a member</h4>
+<form asp-controller="Invites" asp-action="Send" method="post" class="row g-2 mb-4">
+	<input type="hidden" name="projectId" value="@Model.Id" />
+	<div class="col-auto">
+		<input type="email" name="email" class="form-control" placeholder="user@example.com" required />
+	</div>
+	<div class="col-auto">
+		<button type="submit" class="btn btn-success">Send Invite</button>
+	</div>
+</form>
+
 <h4>Boards</h4>
 @if (Model.Boards.Any())
 {

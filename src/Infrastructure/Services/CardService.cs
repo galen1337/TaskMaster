@@ -47,14 +47,16 @@ public class CardService : ICardService
 
 		var projectId = board.ProjectId;
 
-		// Only board members or platform admin can create
+		// Only board members, project Owner/Admin, or platform admin can create
 		bool isBoardMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId);
-		if (!isBoardMember && !isPlatformAdmin)
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!isBoardMember && !isProjectOwnerOrAdmin && !isPlatformAdmin)
 			throw new UnauthorizedAccessException("Not allowed to create cards on this board.");
 
-		if (assigneeUserId != null)
+		var normalizedAssigneeId = string.IsNullOrWhiteSpace(assigneeUserId) ? null : assigneeUserId;
+		if (normalizedAssigneeId != null)
 		{
-			bool assigneeIsProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == assigneeUserId);
+			bool assigneeIsProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == normalizedAssigneeId);
 			if (!assigneeIsProjectMember)
 				throw new ArgumentException("Assignee must be a project member.");
 		}
@@ -70,7 +72,7 @@ public class CardService : ICardService
 			Title = title.Trim(),
 			Description = string.IsNullOrWhiteSpace(description) ? null : description,
 			Priority = priority,
-			AssigneeId = assigneeUserId,
+			AssigneeId = normalizedAssigneeId,
 			CreatedAt = DateTime.UtcNow,
 			UpdatedAt = DateTime.UtcNow
 		};
@@ -87,9 +89,10 @@ public class CardService : ICardService
 		var boardId = card.BoardId;
 		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
 
-		// Only board members or platform admin can move
+		// Only board members, project Owner/Admin, or platform admin can move
 		bool isBoardMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId);
-		if (!isBoardMember && !isPlatformAdmin)
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!isBoardMember && !isProjectOwnerOrAdmin && !isPlatformAdmin)
 			throw new UnauthorizedAccessException("Not allowed to move cards on this board.");
 
 		// Validate target column belongs to same board

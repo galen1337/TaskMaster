@@ -58,6 +58,20 @@ public class BoardService : IBoardService
 		_db.Boards.Add(board);
 		await _db.SaveChangesAsync();
 
+		// Ensure creator is a board admin by default
+		bool creatorAlreadyMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == board.Id && bm.UserId == currentUserId);
+		if (!creatorAlreadyMember)
+		{
+			_db.BoardMembers.Add(new BoardMember
+			{
+				BoardId = board.Id,
+				UserId = currentUserId,
+				Role = BoardRole.Admin,
+				AssignedAt = DateTime.UtcNow
+			});
+			await _db.SaveChangesAsync();
+		}
+
 		// Seed default columns
 		var defaultColumns = new[] { "To Do", "In Progress", "Done" };
 		int order = 0;

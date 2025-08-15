@@ -26,6 +26,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<Application.Services.IBoardService, Infrastructure.Services.BoardService>();
 
 var app = builder.Build();
 

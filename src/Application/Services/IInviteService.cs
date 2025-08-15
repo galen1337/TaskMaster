@@ -6,4 +6,5 @@ public interface IInviteService
 {
 	Task<IReadOnlyList<Invite>> GetInboxAsync(string userEmail);
 	Task<bool> AcceptAsync(string token, string userId);
+	Task<string> SendInviteAsync(int projectId, string email, string invitedByUserId, bool isPlatformAdmin);
 } 

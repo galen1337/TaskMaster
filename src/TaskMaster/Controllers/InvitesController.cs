@@ -25,9 +25,18 @@ public class InvitesController : Controller
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Send(int projectId, string email)
 	{
-		// This send action still handled in previous implementation via context; for brevity, keep using this endpoint for now
-		// Redirect to Projects/Details where service-backed send can be added later
-		TempData["Error"] = "Invite sending via service not yet wired here.";
+		string? senderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(senderId)) return Challenge();
+		try
+		{
+			bool isPlatformAdmin = User.IsInRole("Admin");
+			await _invites.SendInviteAsync(projectId, email, senderId, isPlatformAdmin);
+			TempData["Success"] = "Invite created";
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = ex.Message;
+		}
 		return RedirectToAction("Details", "Projects", new { id = projectId });
 	}
 

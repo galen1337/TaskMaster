@@ -38,7 +38,7 @@ public class InviteService : IInviteService
 			{
 				ProjectId = invite.ProjectId,
 				UserId = userId,
-				Role = Domain.Enums.ProjectRole.Member,
+				Role = ProjectRole.Member,
 				JoinedAt = DateTime.UtcNow
 			});
 		}
@@ -46,5 +46,27 @@ public class InviteService : IInviteService
 		invite.Status = InviteStatus.Accepted;
 		await _db.SaveChangesAsync();
 		return true;
+	}
+
+	public async Task<string> SendInviteAsync(int projectId, string email, string invitedByUserId, bool isPlatformAdmin)
+	{
+		if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email is required", nameof(email));
+		bool canManage = isPlatformAdmin || await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == invitedByUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!canManage) throw new UnauthorizedAccessException("Not allowed to invite to this project.");
+
+		var token = Guid.NewGuid().ToString("N");
+		var invite = new Invite
+		{
+			ProjectId = projectId,
+			InvitedEmail = email.Trim(),
+			InvitedByUserId = invitedByUserId,
+			Token = token,
+			ExpiresAt = DateTime.UtcNow.AddDays(7),
+			Status = InviteStatus.Pending,
+			CreatedAt = DateTime.UtcNow
+		};
+		_db.Invites.Add(invite);
+		await _db.SaveChangesAsync();
+		return token;
 	}
 } 

@@ -10,7 +10,13 @@
 	<link rel="stylesheet" href="~/TaskMaster.styles.css" asp-append-version="true" />
 	<style>
 		body { min-height: 100vh; }
-		.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 250px; padding: 1rem; background: #f8f9fa; border-right: 1px solid #e5e5e5; }
+		.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 250px; padding: 1rem; background: #0d6efd; color:#fff; }
+		.sidebar .nav-link, .sidebar .brand { color:#fff !important; }
+		.sidebar .dropdown-toggle::after{ display:none; }
+		.sidebar .caret { margin-left: 6px; transition: transform .2s ease; }
+		.sidebar .caret.open { transform: rotate(90deg); }
+		.sidebar .submenu { display:none; padding-left:.75rem; }
+		.sidebar .submenu.show { display:block; }
 		.content { margin-left: 260px; }
 		.brand { font-weight: 600; font-size: 1.25rem; display: block; margin-bottom: .75rem; }
 	</style>
@@ -29,21 +35,28 @@
 			<li class="nav-item">
 				@if (User.Identity?.IsAuthenticated ?? false)
 				{
-					<a class="nav-link text-dark" asp-controller="Projects" asp-action="Index">Projects</a>
+					<a class="nav-link d-flex align-items-center" asp-controller="Projects" asp-action="Index" id="projectsLink">
+						<span>Projects</span>
+						<span class="caret">›</span>
+					</a>
+					<div class="submenu" id="projectsSubmenu">
+						<div class="small text-white-50 mb-1">Quick access</div>
+						<ul class="nav flex-column" id="projectsQuickList"></ul>
+					</div>
 				}
 				else
 				{
-					<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">Projects</a>
+					<a class="nav-link" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">Projects</a>
 				}
 			</li>
 			@if (User.Identity?.IsAuthenticated ?? false)
 			{
 				<li class="nav-item">
-					<a class="nav-link text-dark" asp-controller="Invites" asp-action="Inbox">Inbox</a>
+					<a class="nav-link" asp-controller="Invites" asp-action="Inbox">Inbox</a>
 				</li>
 			}
 			<li class="nav-item">
-				<a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+				<a class="nav-link" asp-area="" asp-page="/Privacy">Privacy</a>
 			</li>
 		</ul>
 		<div>
@@ -71,10 +84,39 @@
 			const success = '@(TempData["Success"] as string)';
 			const error = '@(TempData["Error"] as string)';
 			if (success) {
-				Swal.fire({ toast: true, position: 'top-end', timer: 2500, timerProgressBar: true, icon: 'success', title: success, showConfirmButton: false });
+				Swal.fire({ toast: true, position: 'top-end', timer: 1500, timerProgressBar: true, icon: 'success', title: success, showConfirmButton: false });
 			}
 			if (error) {
 				Swal.fire({ toast: true, position: 'top-end', timer: 3500, timerProgressBar: true, icon: 'error', title: error, showConfirmButton: false });
+			}
+
+			// Sidebar projects submenu
+			const link = document.getElementById('projectsLink');
+			const submenu = document.getElementById('projectsSubmenu');
+			const caret = link ? link.querySelector('.caret') : null;
+			if (link) {
+				link.addEventListener('click', (e) => {
+					// Default behavior navigates to Projects index. But if caret clicked, toggle submenu only
+					if (e.target && e.target.classList.contains('caret')) {
+						e.preventDefault();
+						submenu?.classList.toggle('show');
+						caret?.classList.toggle('open');
+					}
+				});
+				// Populate quick list
+				fetch('/Projects/UserList', { headers: { 'X-Requested-With':'XMLHttpRequest' } })
+					.then(r => r.ok ? r.json() : [])
+					.then(items => {
+						const ul = document.getElementById('projectsQuickList');
+						if (!ul || !Array.isArray(items)) return;
+						ul.innerHTML = '';
+						items.forEach(p => {
+							const li = document.createElement('li');
+							li.className = 'nav-item';
+							li.innerHTML = `<a class="nav-link" href="/Projects/Details/${p.id}">${p.name}</a>`;
+							ul.appendChild(li);
+						});
+					});
 			}
 		})();
 	</script>

@@ -1,4 +1,5 @@
 using Application.Services;
+using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -8,28 +9,32 @@ namespace Infrastructure.Services;
 public class ProjectService : IProjectService
 {
 	private readonly ApplicationDbContext _db;
+	public ProjectService(ApplicationDbContext db) { _db = db; }
 
-	public ProjectService(ApplicationDbContext db)
+	public async Task ChangeMemberRoleAsync(int projectId, string memberUserId, ProjectRole newRole, string currentUserId, bool isPlatformAdmin)
 	{
-		_db = db;
+		var project = await _db.Projects.Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == projectId);
+		if (project == null) throw new KeyNotFoundException("Project not found");
+		bool currentUserIsOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+		if (!currentUserIsOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed");
+		var member = await _db.ProjectMembers.FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == memberUserId);
+		if (member == null) throw new KeyNotFoundException("Member not found");
+		if (member.Role == ProjectRole.Owner && newRole != ProjectRole.Owner)
+		{
+			bool otherOwnersExist = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId != memberUserId && pm.Role == ProjectRole.Owner);
+			if (!otherOwnersExist) throw new InvalidOperationException("Cannot remove the last owner");
+		}
+		member.Role = newRole;
+		await _db.SaveChangesAsync();
 	}
 
-	public async Task ChangeMemberRoleAsync(int projectId, string targetUserId, ProjectRole newRole, string actingUserId, bool isPlatformAdmin)
+	public async Task<IReadOnlyList<ProjectOption>> GetUserProjectsAsync(string userId)
 	{
-		bool actingIsOwnerOrAdmin = isPlatformAdmin || await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == actingUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
-		if (!actingIsOwnerOrAdmin) throw new UnauthorizedAccessException("Not allowed to change roles.");
-
-		var targetMember = await _db.ProjectMembers.FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == targetUserId);
-		if (targetMember == null) throw new KeyNotFoundException("Member not found");
-
-		// Prevent demoting the last Owner
-		if (targetMember.Role == ProjectRole.Owner && newRole != ProjectRole.Owner)
-		{
-			int ownerCount = await _db.ProjectMembers.CountAsync(pm => pm.ProjectId == projectId && pm.Role == ProjectRole.Owner);
-			if (ownerCount <= 1) throw new InvalidOperationException("Cannot demote the last Owner.");
-		}
-
-		targetMember.Role = newRole;
-		await _db.SaveChangesAsync();
+		return await _db.ProjectMembers
+			.Where(pm => pm.UserId == userId)
+			.Select(pm => new ProjectOption(pm.ProjectId, pm.Project.Name))
+			.Distinct()
+			.OrderBy(p => p.Name)
+			.ToListAsync();
 	}
 } 

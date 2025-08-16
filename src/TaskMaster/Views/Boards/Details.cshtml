@@ -2,14 +2,6 @@
 
 <h2>@Model.Name</h2>
 <p>Project: <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId">@Model.Project.Name</a></p>
-@if (TempData["Success"] is string s)
-{
-	<div class="alert alert-success">@s</div>
-}
-@if (TempData["Error"] is string e)
-{
-	<div class="alert alert-danger">@e</div>
-}
 
 <div class="mb-3">
 	<button class="btn btn-primary" id="openCreateCard" data-board-id="@Model.Id">Add card +</button>

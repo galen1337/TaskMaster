@@ -45,8 +45,8 @@ public class ProjectsController : Controller
 		if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
 		bool isMember = await _context.ProjectMembers.AnyAsync(pm => pm.ProjectId == id && pm.UserId == userId);
-		bool isAdmin = User.IsInRole("Admin");
-		if (!isMember && !isAdmin) return Forbid();
+		bool isPlatformAdmin = User.IsInRole("Admin");
+		if (!isMember && !isPlatformAdmin) return Forbid();
 
 		var project = await _context.Projects
 			.Include(p => p.Boards)
@@ -54,6 +54,10 @@ public class ProjectsController : Controller
 				.ThenInclude(m => m.User)
 			.FirstOrDefaultAsync(p => p.Id == id);
 		if (project == null) return NotFound();
+
+		var myRole = await _context.ProjectMembers.Where(pm => pm.ProjectId == id && pm.UserId == userId).Select(pm => pm.Role).FirstOrDefaultAsync();
+		ViewBag.CanManageProject = isPlatformAdmin || myRole == ProjectRole.Owner || myRole == ProjectRole.Admin;
+		ViewBag.CurrentUserId = userId;
 
 		return View(project);
 	}
@@ -149,5 +153,14 @@ public class ProjectsController : Controller
 			TempData["Error"] = ex.Message;
 		}
 		return RedirectToAction(nameof(Details), new { id = projectId });
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> UserList()
+	{
+		string? userId = _userManager.GetUserId(User);
+		if (string.IsNullOrEmpty(userId)) return Unauthorized();
+		var items = await _projectService.GetUserProjectsAsync(userId);
+		return Json(items.Select(p => new { id = p.Id, name = p.Name }));
 	}
 } 

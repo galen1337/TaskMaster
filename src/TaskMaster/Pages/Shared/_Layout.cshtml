@@ -8,61 +8,121 @@
 	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/TaskMaster.styles.css" asp-append-version="true" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 	<style>
 		body { min-height: 100vh; }
-		.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 250px; padding: 1rem; background: #0d6efd; color:#fff; display: flex; flex-direction: column; }
-		.sidebar .nav-link, .sidebar .brand { color:#fff !important; }
-		.sidebar .dropdown-toggle::after{ display:none; }
-		.sidebar .caret { margin-left: 6px; transition: transform .2s ease; }
-		.sidebar .projects-dropdown { position: relative; }
-		.sidebar .projects-dropdown:hover .submenu { display: block; }
-		.sidebar .submenu { display:none; position: absolute; left: 100%; top: 0; min-width: 200px; background: #0d6efd; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.5rem; z-index: 1000; }
-		.sidebar .submenu .nav-link { padding: 0.25rem 0.5rem; border-radius: 4px; }
-		.sidebar .submenu .nav-link:hover { background: rgba(255,255,255,0.1); }
+		.sidebar { 
+			position: fixed; 
+			top: 0; 
+			bottom: 0; 
+			left: 0; 
+			width: 250px; 
+			padding: 1.5rem 1rem; 
+			background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%); 
+			color: #fff; 
+			display: flex; 
+			flex-direction: column; 
+			box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+		}
+		.sidebar .brand { 
+			font-weight: 700; 
+			font-size: 1.5rem; 
+			display: block; 
+			margin-bottom: 2rem; 
+			color: #fff !important; 
+			text-decoration: none;
+			text-align: center;
+			padding: 0.5rem;
+			border-bottom: 1px solid rgba(255,255,255,0.2);
+		}
+		.sidebar .nav-link { 
+			color: rgba(255,255,255,0.8) !important; 
+			padding: 0.75rem 1rem; 
+			margin: 0.25rem 0;
+			border-radius: 8px; 
+			transition: all 0.2s ease;
+			display: flex;
+			align-items: center;
+			text-decoration: none;
+		}
+		.sidebar .nav-link:hover { 
+			background: rgba(255,255,255,0.15); 
+			color: #fff !important;
+			transform: translateX(4px);
+		}
+		.sidebar .nav-link.active { 
+			background: rgba(255,255,255,0.25); 
+			color: #fff !important;
+			font-weight: 600;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		.sidebar .nav-link i { 
+			margin-right: 0.75rem; 
+			font-size: 1.1rem;
+			width: 20px;
+			text-align: center;
+		}
 		.sidebar .main-nav { flex: 1; }
-		.sidebar .bottom-nav { margin-top: auto; }
+		.sidebar .bottom-nav { 
+			margin-top: auto; 
+			padding-top: 1rem;
+			border-top: 1px solid rgba(255,255,255,0.2);
+		}
 		.content { margin-left: 260px; }
-		.brand { font-weight: 600; font-size: 1.25rem; display: block; margin-bottom: .75rem; }
 	</style>
 </head>
 <body>
 	<div class="sidebar">
 		@if (User.Identity?.IsAuthenticated ?? false)
 		{
-			<a class="brand" asp-controller="Projects" asp-action="Index">TaskMaster</a>
+			<a class="brand" asp-controller="Projects" asp-action="Index">
+				<i class="bi bi-kanban"></i> TaskMaster
+			</a>
 		}
 		else
 		{
-			<a class="brand" asp-area="" asp-page="/Index">TaskMaster</a>
+			<a class="brand" asp-area="" asp-page="/Index">
+				<i class="bi bi-kanban"></i> TaskMaster
+			</a>
 		}
 		<div class="main-nav">
-			<ul class="nav flex-column mb-3">
+			<ul class="nav flex-column">
 				<li class="nav-item">
 					@if (User.Identity?.IsAuthenticated ?? false)
 					{
-						<div class="projects-dropdown">
-							<a class="nav-link d-flex align-items-center" asp-controller="Projects" asp-action="Index">
-								<span>Projects</span>
-								<span class="caret">›</span>
-							</a>
-							<div class="submenu">
-								<ul class="nav flex-column" id="projectsQuickList"></ul>
-							</div>
-						</div>
+						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Projects" ? "active" : "")" asp-controller="Projects" asp-action="Index">
+							<i class="bi bi-folder"></i>
+							<span>Projects</span>
+						</a>
 					}
 					else
 					{
-						<a class="nav-link" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">Projects</a>
+						<a class="nav-link" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">
+							<i class="bi bi-folder"></i>
+							<span>Projects</span>
+						</a>
 					}
 				</li>
 				@if (User.Identity?.IsAuthenticated ?? false)
 				{
 					<li class="nav-item">
-						<a class="nav-link" asp-controller="Invites" asp-action="Inbox">Inbox</a>
+						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invites" ? "active" : "")" asp-controller="Invites" asp-action="Inbox">
+							<i class="bi bi-envelope"></i>
+							<span>Inbox</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Boards" ? "active" : "")" asp-controller="Boards" asp-action="Index">
+							<i class="bi bi-kanban-fill"></i>
+							<span>Boards</span>
+						</a>
 					</li>
 				}
 				<li class="nav-item">
-					<a class="nav-link" asp-area="" asp-page="/Privacy">Privacy</a>
+					<a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Privacy" ? "active" : "")" asp-area="" asp-page="/Privacy">
+						<i class="bi bi-shield-lock"></i>
+						<span>Privacy</span>
+					</a>
 				</li>
 			</ul>
 		</div>
@@ -96,21 +156,6 @@
 			if (error) {
 				Swal.fire({ toast: true, position: 'top-end', timer: 3500, timerProgressBar: true, icon: 'error', title: error, showConfirmButton: false });
 			}
-
-			// Populate projects dropdown
-			fetch('/Projects/UserList', { headers: { 'X-Requested-With':'XMLHttpRequest' } })
-				.then(r => r.ok ? r.json() : [])
-				.then(items => {
-					const ul = document.getElementById('projectsQuickList');
-					if (!ul || !Array.isArray(items)) return;
-					ul.innerHTML = '';
-					items.forEach(p => {
-						const li = document.createElement('li');
-						li.className = 'nav-item';
-						li.innerHTML = `<a class="nav-link" href="/Projects/Details/${p.id}">${p.name}</a>`;
-						ul.appendChild(li);
-					});
-				});
 		})();
 	</script>
 

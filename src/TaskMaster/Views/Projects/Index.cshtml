@@ -8,8 +8,7 @@
 	<thead>
 		<tr>
 			<th>Name</th>
-			<th>Key</th>
-			<th>Created</th>
+			<th>Owner</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -18,10 +17,11 @@
 	{
 		<tr>
 			<td>@p.Name</td>
-			<td>@p.Key</td>
-			<td>@p.CreatedAt.ToLocalTime().ToString("g")</td>
+			<td>@p.Owner?.Email</td>
 			<td>
-				<a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@p.Id">Open</a>
+				<a class="btn btn-primary btn-lg" asp-action="Details" asp-route-id="@p.Id">
+					Open <i class="bi bi-arrow-right"></i>
+				</a>
 			</td>
 		</tr>
 	}

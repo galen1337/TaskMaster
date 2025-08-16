@@ -1,6 +1,6 @@
 @model Domain.Entities.Project
 
-<h2>@Model.Name (@Model.Key)</h2>
+<h2>@Model.Name</h2>
 <p>@Model.Description</p>
 
 @if (TempData["Success"] is string s)
@@ -12,16 +12,19 @@
 	<div class="alert alert-danger">@e</div>
 }
 
-<h4>Invite a member</h4>
-<form asp-controller="Invites" asp-action="Send" method="post" class="row g-2 mb-4">
-	<input type="hidden" name="projectId" value="@Model.Id" />
-	<div class="col-auto">
-		<input type="email" name="email" class="form-control" placeholder="user@example.com" required />
-	</div>
-	<div class="col-auto">
-		<button type="submit" class="btn btn-success">Send Invite</button>
-	</div>
-</form>
+@if ((bool)(ViewBag.CanManageProject ?? false))
+{
+	<h4>Invite a member</h4>
+	<form asp-controller="Invites" asp-action="Send" method="post" class="row g-2 mb-4">
+		<input type="hidden" name="projectId" value="@Model.Id" />
+		<div class="col-auto">
+			<input type="email" name="email" class="form-control" placeholder="user@example.com" required />
+		</div>
+		<div class="col-auto">
+			<button type="submit" class="btn btn-success">Send Invite</button>
+		</div>
+	</form>
+}
 
 <h4>Boards</h4>
 @if (Model.Boards.Any())
@@ -41,19 +44,22 @@ else
 	<p>No boards yet.</p>
 }
 
-<form asp-controller="Boards" asp-action="Create" method="post" class="row g-2 mb-4">
-	<input type="hidden" name="projectId" value="@Model.Id" />
-	<div class="col-auto">
-		<input type="text" name="Name" class="form-control" placeholder="Board name" required />
-	</div>
-	<div class="col-auto form-check align-self-center">
-		<input class="form-check-input" type="checkbox" name="IsPrivate" id="isPrivate" />
-		<label class="form-check-label" for="isPrivate">Private</label>
-	</div>
-	<div class="col-auto">
-		<button type="submit" class="btn btn-primary">Add Board</button>
-	</div>
-</form>
+@if ((bool)(ViewBag.CanManageProject ?? false))
+{
+	<form asp-controller="Boards" asp-action="Create" method="post" class="row g-2 mb-4">
+		<input type="hidden" name="projectId" value="@Model.Id" />
+		<div class="col-auto">
+			<input type="text" name="Name" class="form-control" placeholder="Board name" required />
+		</div>
+		<div class="col-auto form-check align-self-center">
+			<input class="form-check-input" type="checkbox" name="IsPrivate" id="isPrivate" />
+			<label class="form-check-label" for="isPrivate">Private</label>
+		</div>
+		<div class="col-auto">
+			<button type="submit" class="btn btn-primary">Add Board</button>
+		</div>
+	</form>
+}
 
 <h4>Members</h4>
 @if (Model.Members.Any())
@@ -73,16 +79,19 @@ else
 				<td>@m.User.Email</td>
 				<td>@m.Role</td>
 				<td>
-					<form asp-controller="Projects" asp-action="ChangeRole" method="post" class="d-flex gap-2">
-						<input type="hidden" name="projectId" value="@Model.Id" />
-						<input type="hidden" name="userId" value="@m.UserId" />
-						<select name="role" class="form-select form-select-sm" style="max-width: 160px;">
-							<option value="Owner" selected="@(m.Role == Domain.Enums.ProjectRole.Owner)">Owner</option>
-							<option value="Admin" selected="@(m.Role == Domain.Enums.ProjectRole.Admin)">Admin</option>
-							<option value="Member" selected="@(m.Role == Domain.Enums.ProjectRole.Member)">Member</option>
-						</select>
-						<button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
-					</form>
+					@if ((bool)(ViewBag.CanManageProject ?? false) && m.Role != Domain.Enums.ProjectRole.Owner)
+					{
+						<form asp-controller="Projects" asp-action="ChangeRole" method="post" class="d-flex gap-2">
+							<input type="hidden" name="projectId" value="@Model.Id" />
+							<input type="hidden" name="userId" value="@m.UserId" />
+							<select name="role" class="form-select form-select-sm" style="max-width: 160px;">
+								<option value="Owner" selected="@(m.Role == Domain.Enums.ProjectRole.Owner)">Owner</option>
+								<option value="Admin" selected="@(m.Role == Domain.Enums.ProjectRole.Admin)">Admin</option>
+								<option value="Member" selected="@(m.Role == Domain.Enums.ProjectRole.Member)">Member</option>
+							</select>
+							<button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+						</form>
+					}
 				</td>
 			</tr>
 		}

@@ -91,14 +91,14 @@
 					@if (User.Identity?.IsAuthenticated ?? false)
 					{
 						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Projects" ? "active" : "")" asp-controller="Projects" asp-action="Index">
-							<i class="bi bi-folder"></i>
+							<i class="bi bi-kanban-fill"></i>
 							<span>Projects</span>
 						</a>
 					}
 					else
 					{
 						<a class="nav-link" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Projects">
-							<i class="bi bi-folder"></i>
+							<i class="bi bi-kanban-fill"></i>
 							<span>Projects</span>
 						</a>
 					}
@@ -109,12 +109,6 @@
 						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invites" ? "active" : "")" asp-controller="Invites" asp-action="Inbox">
 							<i class="bi bi-envelope"></i>
 							<span>Inbox</span>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Boards" ? "active" : "")" asp-controller="Boards" asp-action="Index">
-							<i class="bi bi-kanban-fill"></i>
-							<span>Boards</span>
 						</a>
 					</li>
 				}

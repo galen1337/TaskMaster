@@ -28,6 +28,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<Application.Services.IBoardService, Infrastructure.Services.BoardService>();
 builder.Services.AddScoped<Application.Services.ICardService, Infrastructure.Services.CardService>();
+builder.Services.AddScoped<Application.Services.IInviteService, Infrastructure.Services.InviteService>();
+builder.Services.AddScoped<Application.Services.IProjectService, Infrastructure.Services.ProjectService>();
 
 var app = builder.Build();
 
@@ -134,7 +136,6 @@ async Task SeedData(ApplicationDbContext context, UserManager<ApplicationUser> u
         var project = new Project
         {
             Name = "TaskMaster Demo",
-            Key = "DEMO",
             Description = "Demo project for TaskMaster Kanban application",
             OwnerId = adminUser.Id
         };

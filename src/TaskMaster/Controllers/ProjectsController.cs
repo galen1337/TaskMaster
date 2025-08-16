@@ -33,6 +33,7 @@ public class ProjectsController : Controller
 		var projects = await _context.ProjectMembers
 			.Where(pm => pm.UserId == userId)
 			.Select(pm => pm.Project)
+			.Include(p => p.Owner)
 			.OrderByDescending(p => p.CreatedAt)
 			.ToListAsync();
 
@@ -88,7 +89,6 @@ public class ProjectsController : Controller
 			{
 				Name = model.Name,
 				Description = model.Description,
-				Key = GenerateProjectKey(model.Name),
 				OwnerId = userId,
 				CreatedAt = DateTime.UtcNow
 			};
@@ -114,26 +114,6 @@ public class ProjectsController : Controller
 			ViewBag.Debug = $"Exception: {ex}";
 			return View(model);
 		}
-	}
-
-	private static string GenerateProjectKey(string name)
-	{
-		if (string.IsNullOrWhiteSpace(name))
-			return "PROJ";
-
-		// Extract letters and convert to uppercase
-		var letters = new string(name.Where(char.IsLetter).ToArray()).ToUpperInvariant();
-		
-		// If we have enough letters, take the first 4
-		if (letters.Length >= 4) 
-			return letters[..4];
-		
-		// If we have some letters but not enough, pad with 'X'
-		if (letters.Length > 0)
-			return letters.PadRight(4, 'X');
-		
-		// If no letters at all, use default
-		return "PROJ";
 	}
 
 	[HttpPost]

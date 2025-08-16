@@ -10,7 +10,12 @@
 	<link rel="stylesheet" href="~/TaskMaster.styles.css" asp-append-version="true" />
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 	<style>
-		body { min-height: 100vh; }
+		html, body { 
+			min-height: 100vh; 
+			overflow-x: hidden;
+			margin: 0;
+			padding: 0;
+		}
 		.sidebar { 
 			position: fixed; 
 			top: 0; 
@@ -23,6 +28,7 @@
 			display: flex; 
 			flex-direction: column; 
 			box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+			z-index: 1000;
 		}
 		.sidebar .brand { 
 			font-weight: 700; 
@@ -68,7 +74,50 @@
 			padding-top: 1rem;
 			border-top: 1px solid rgba(255,255,255,0.2);
 		}
-		.content { margin-left: 260px; }
+		.content { 
+			margin-left: 250px; 
+			min-height: 100vh;
+			width: calc(100vw - 250px);
+			max-width: calc(100vw - 250px);
+			overflow-x: hidden;
+		}
+		.content .container { 
+			max-width: 100%;
+			padding-left: 1rem;
+			padding-right: 1rem;
+		}
+		
+		/* Responsive design */
+		@media (max-width: 768px) {
+			.sidebar { 
+				width: 200px; 
+			}
+			.content { 
+				margin-left: 200px; 
+				width: calc(100vw - 200px);
+				max-width: calc(100vw - 200px);
+			}
+		}
+		
+		@media (max-width: 576px) {
+			.sidebar { 
+				width: 180px; 
+			}
+			.content { 
+				margin-left: 180px; 
+				width: calc(100vw - 180px);
+				max-width: calc(100vw - 180px);
+			}
+		}
+		
+		/* Ensure tables and other content don't overflow */
+		.table-responsive {
+			overflow-x: auto;
+		}
+		
+		.btn {
+			white-space: nowrap;
+		}
 	</style>
 </head>
 <body>

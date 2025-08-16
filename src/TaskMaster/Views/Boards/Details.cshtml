@@ -24,6 +24,11 @@
 	.kanban-card .meta { color:#6b7280; font-size:.8rem; }
 	.avatar { width:24px; height:24px; border-radius:50%; background:#e5e7eb; display:inline-flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:600; color:#374151; }
 	.drag-ghost { opacity: .4; }
+	/* Priority colors */
+	.priority-low { color: green; }
+	.priority-medium { color: goldenrod; }
+	.priority-high { color: orange; }
+	.priority-critical { color: red; }
 </style>
 
 <div class="row" id="board" data-board-id="@Model.Id">
@@ -41,7 +46,17 @@
 								<a class="btn btn-sm btn-link p-0" href="#" data-card-details="@card.Id">Details</a>
 							</div>
 							<div class="meta d-flex align-items-center gap-2">
-								<span>@card.Priority</span>
+								@{
+									var pClass = card.Priority switch
+									{
+										Domain.Enums.Priority.Low => "priority-low",
+										Domain.Enums.Priority.Medium => "priority-medium",
+										Domain.Enums.Priority.High => "priority-high",
+										Domain.Enums.Priority.Critical => "priority-critical",
+										_ => string.Empty
+									};
+								}
+								<span class="@pClass">@card.Priority</span>
 								@if (!string.IsNullOrEmpty(card.Assignee?.Email))
 								{
 									<span class="avatar" title="@card.Assignee.Email">@card.Assignee.Email.Substring(0,1).ToUpper()</span>

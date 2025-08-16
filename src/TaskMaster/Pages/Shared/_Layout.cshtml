@@ -63,7 +63,21 @@
 
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>
 	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
+
+	<script>
+		(function(){
+			const success = '@(TempData["Success"] as string)';
+			const error = '@(TempData["Error"] as string)';
+			if (success) {
+				Swal.fire({ toast: true, position: 'top-end', timer: 2500, timerProgressBar: true, icon: 'success', title: success, showConfirmButton: false });
+			}
+			if (error) {
+				Swal.fire({ toast: true, position: 'top-end', timer: 3500, timerProgressBar: true, icon: 'error', title: error, showConfirmButton: false });
+			}
+		})();
+	</script>
 
 	@await RenderSectionAsync("Scripts", required: false)
 </body>

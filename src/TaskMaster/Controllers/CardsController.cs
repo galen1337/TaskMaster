@@ -33,7 +33,7 @@ public class CardsController : Controller
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Assign(int id, string userId)
+	public async Task<IActionResult> Assign(int id, string? userId)
 	{
 		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
@@ -41,9 +41,9 @@ public class CardsController : Controller
 		try
 		{
 			bool isAdmin = User.IsInRole("Admin");
-			int boardId = await _cardService.AssignAsync(id, userId, currentUserId, isAdmin);
-			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
-			TempData["Success"] = "Card assigned.";
+			int boardId = await _cardService.AssignAsync(id, userId ?? string.Empty, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = true });
+			TempData["Success"] = "Card assignment updated.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (UnauthorizedAccessException)
@@ -58,11 +58,11 @@ public class CardsController : Controller
 		}
 		catch (Exception)
 		{
-			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return StatusCode(500);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return StatusCode(500, new { error = "Failed to assign card." });
 			TempData["Error"] = "Failed to assign card.";
 		}
 
-		return RedirectToAction("Index", "Projects");
+		return Redirect(Request.Headers["Referer"].ToString() ?? Url.Action("Index", "Projects")!);
 	}
 
 	[HttpPost]
@@ -76,11 +76,13 @@ public class CardsController : Controller
 		{
 			bool isAdmin = User.IsInRole("Admin");
 			int targetBoardId = await _cardService.CreateAsync(boardId, columnId, title, description, priority, assigneeId, currentUserId, isAdmin);
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = true });
 			TempData["Success"] = "Card created.";
 			return RedirectToAction("Details", "Boards", new { id = targetBoardId });
 		}
 		catch (Exception ex)
 		{
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
@@ -97,14 +99,14 @@ public class CardsController : Controller
 		{
 			bool isAdmin = User.IsInRole("Admin");
 			int boardId = await _cardService.MoveAsync(id, targetColumnId, currentUserId, isAdmin);
-			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = false });
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
 		catch (Exception ex)
 		{
 			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
-			return RedirectToAction("Index", "Projects");
+			return RedirectToAction("Details", "Boards", new { id = Request.Headers["RefererBoardId"] });
 		}
 	}
 
@@ -131,7 +133,7 @@ public class CardsController : Controller
 		try
 		{
 			int boardId = await _cardService.UpdateAsync(id, title, description, priority, currentUserId, isAdmin);
-			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = true });
 			TempData["Success"] = "Card updated.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
@@ -139,7 +141,7 @@ public class CardsController : Controller
 		{
 			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
-			return RedirectToAction("Index", "Projects");
+			return Redirect(Request.Headers["Referer"].ToString());
 		}
 	}
 
@@ -153,7 +155,7 @@ public class CardsController : Controller
 		try
 		{
 			int boardId = await _cardService.DeleteAsync(id, currentUserId, isAdmin);
-			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { boardId });
+			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = true });
 			TempData["Success"] = "Card deleted.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });
 		}
@@ -161,7 +163,7 @@ public class CardsController : Controller
 		{
 			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return BadRequest(new { error = ex.Message });
 			TempData["Error"] = ex.Message;
-			return RedirectToAction("Index", "Projects");
+			return Redirect(Request.Headers["Referer"].ToString());
 		}
 	}
 } 

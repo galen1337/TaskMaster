@@ -20,17 +20,27 @@ public class CardService : ICardService
 		var card = await _db.Cards.Include(c => c.Board).FirstOrDefaultAsync(c => c.Id == cardId);
 		if (card == null) throw new KeyNotFoundException("Card not found");
 
-		// Verify assignee is a member of the project
 		var projectId = await _db.Boards.Where(b => b.Id == card.BoardId).Select(b => b.ProjectId).FirstAsync();
 		bool currentUserIsBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == card.BoardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
 		bool currentUserIsProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
+
+		// Authorization: board admin, project Owner/Admin, or platform admin can assign/unassign
+		if (!currentUserIsBoardAdmin && !currentUserIsProjectOwnerOrAdmin && !isPlatformAdmin)
+			throw new UnauthorizedAccessException("Not allowed to assign this card.");
+
+		// Empty means unassign
+		if (string.IsNullOrWhiteSpace(assigneeUserId))
+		{
+			card.AssigneeId = null;
+			card.UpdatedAt = DateTime.UtcNow;
+			await _db.SaveChangesAsync();
+			return card.BoardId;
+		}
+
+		// Verify assignee is a member of the project when assigning
 		bool assigneeIsProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == assigneeUserId);
 		if (!assigneeIsProjectMember)
 			throw new ArgumentException("Assignee must be a member of the project.");
-
-		// Authorization: board admin, project Owner/Admin, or platform admin can assign
-		if (!currentUserIsBoardAdmin && !currentUserIsProjectOwnerOrAdmin && !isPlatformAdmin)
-			throw new UnauthorizedAccessException("Not allowed to assign this card.");
 
 		card.AssigneeId = assigneeUserId;
 		card.UpdatedAt = DateTime.UtcNow;

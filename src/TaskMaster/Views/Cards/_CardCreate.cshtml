@@ -1,4 +1,4 @@
-@model (int BoardId, IReadOnlyList<Domain.Entities.Column> Columns, IReadOnlyList<Application.Services.UserOption> Assignees)
+@model (int BoardId, List<Domain.Entities.Column> Columns, List<Application.Services.UserOption> Assignees)
 
 <form asp-controller="Cards" asp-action="Create" method="post">
 	<input type="hidden" name="boardId" value="@Model.BoardId" />

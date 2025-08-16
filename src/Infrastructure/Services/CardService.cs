@@ -124,6 +124,7 @@ public class CardService : ICardService
 		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
 		bool isBoardMember = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId);
 		bool isProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId);
+		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
 		if (!isBoardMember && !isProjectMember && !isPlatformAdmin) return null;
 
 		var options = await _db.ProjectMembers
@@ -131,7 +132,7 @@ public class CardService : ICardService
 			.Select(pm => new UserOption(pm.UserId, pm.User.Email))
 			.ToListAsync();
 
-		return new CardDto(card.Id, card.BoardId, card.ColumnId, card.Title, card.Description, card.Priority, card.AssigneeId, options);
+		return new CardDto(card.Id, card.BoardId, card.ColumnId, card.Title, card.Description, card.Priority, card.AssigneeId, options, isProjectOwnerOrAdmin || isPlatformAdmin);
 	}
 
 	public async Task<int> UpdateAsync(int cardId, string title, string? description, Priority priority, string currentUserId, bool isPlatformAdmin)
@@ -141,9 +142,8 @@ public class CardService : ICardService
 		if (card == null) throw new KeyNotFoundException("Card not found");
 		int boardId = card.BoardId;
 		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
-		bool isBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
 		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
-		if (!isBoardAdmin && !isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to edit this card.");
+		if (!isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to edit this card.");
 		card.Title = title.Trim();
 		card.Description = string.IsNullOrWhiteSpace(description) ? null : description;
 		card.Priority = priority;
@@ -158,9 +158,8 @@ public class CardService : ICardService
 		if (card == null) throw new KeyNotFoundException("Card not found");
 		int boardId = card.BoardId;
 		var board = await _db.Boards.FirstAsync(b => b.Id == boardId);
-		bool isBoardAdmin = await _db.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == currentUserId && bm.Role == BoardRole.Admin);
 		bool isProjectOwnerOrAdmin = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.Owner || pm.Role == ProjectRole.Admin));
-		if (!isBoardAdmin && !isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to delete this card.");
+		if (!isProjectOwnerOrAdmin && !isPlatformAdmin) throw new UnauthorizedAccessException("Not allowed to delete this card.");
 		_db.Cards.Remove(card);
 		await _db.SaveChangesAsync();
 		return boardId;

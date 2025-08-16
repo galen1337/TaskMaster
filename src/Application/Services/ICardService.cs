@@ -13,4 +13,4 @@ public interface ICardService
 }
 
 public record UserOption(string UserId, string Email);
-public record CardDto(int Id, int BoardId, int ColumnId, string Title, string? Description, Priority Priority, string? AssigneeId, IReadOnlyList<UserOption> Assignees); 
+public record CardDto(int Id, int BoardId, int ColumnId, string Title, string? Description, Priority Priority, string? AssigneeId, IReadOnlyList<UserOption> Assignees, bool CanEdit); 

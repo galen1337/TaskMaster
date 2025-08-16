@@ -19,9 +19,10 @@
 	.kanban-column { background: #f8f9fb; border-radius: 12px; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 	.kanban-column .column-header { font-weight: 600; font-size: .9rem; color: #506176; display: flex; align-items: center; justify-content: space-between; margin: 6px 6px 10px; }
 	.kanban-list { min-height: 40px; }
-	.kanban-card { border: 1px solid #e6e9ef; border-radius: 10px; padding: 10px; margin: 8px 6px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); cursor: grab; }
+	.kanban-card { border: 1px solid #e6e9ef; border-radius: 10px; padding: 10px; margin: 8px 6px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); cursor: grab; display:flex; flex-direction:column; height: 140px; }
 	.kanban-card .title { font-weight: 600; color: #1f2937; }
-	.kanban-card .meta { color:#6b7280; font-size:.8rem; }
+	.kanban-card .desc { color:#4b5563; font-size:.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 4px 0 6px; }
+	.kanban-card .meta { color:#6b7280; font-size:.8rem; margin-top:auto; }
 	.avatar { width:24px; height:24px; border-radius:50%; background:#e5e7eb; display:inline-flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:600; color:#374151; }
 	.drag-ghost { opacity: .4; }
 	/* Priority colors */
@@ -45,6 +46,10 @@
 								<div class="title">@card.Title</div>
 								<a class="btn btn-sm btn-link p-0" href="#" data-card-details="@card.Id">Details</a>
 							</div>
+							@if (!string.IsNullOrWhiteSpace(@card.Description))
+							{
+								<div class="desc">@card.Description</div>
+							}
 							<div class="meta d-flex align-items-center gap-2">
 								@{
 									var pClass = card.Priority switch

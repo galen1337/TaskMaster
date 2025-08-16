@@ -125,7 +125,7 @@ public class CardsController : Controller
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Edit(int id, string title, string? description, Priority priority)
+	public async Task<IActionResult> Edit(int id, string title, string? description, Priority priority, string? assigneeId)
 	{
 		string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (string.IsNullOrEmpty(currentUserId)) return Challenge();
@@ -133,6 +133,11 @@ public class CardsController : Controller
 		try
 		{
 			int boardId = await _cardService.UpdateAsync(id, title, description, priority, currentUserId, isAdmin);
+			// Also update assignment if supplied
+			if (assigneeId != null)
+			{
+				await _cardService.AssignAsync(id, assigneeId, currentUserId, isAdmin);
+			}
 			if (Request.Headers["X-Requested-With"] == "XMLHttpRequest") return Ok(new { reload = true });
 			TempData["Success"] = "Card updated.";
 			return RedirectToAction("Details", "Boards", new { id = boardId });

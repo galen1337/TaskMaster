@@ -32,8 +32,9 @@ public class ProjectsController : Controller
 
 		var projects = await _context.ProjectMembers
 			.Where(pm => pm.UserId == userId)
+			.Include(pm => pm.Project)
+				.ThenInclude(p => p.Owner)
 			.Select(pm => pm.Project)
-			.Include(p => p.Owner)
 			.OrderByDescending(p => p.CreatedAt)
 			.ToListAsync();
 

@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Common;
 
 namespace Infrastructure.Data.Configurations;
 
@@ -12,12 +13,12 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         
         builder.HasKey(p => p.Id);
         
-        builder.Property(p => p.Name)
-            .IsRequired()
-            .HasMaxLength(100);
-            
-        builder.Property(p => p.Description)
-            .HasMaxLength(500);
+        		builder.Property(p => p.Name)
+			.IsRequired()
+			.HasMaxLength(ValidationConstants.ProjectNameMaxLength);
+			
+		builder.Property(p => p.Description)
+			.HasMaxLength(ValidationConstants.ProjectDescriptionMaxLength);
             
         builder.Property(p => p.OwnerId)
             .IsRequired();

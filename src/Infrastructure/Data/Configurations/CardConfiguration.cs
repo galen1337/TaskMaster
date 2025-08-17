@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Common;
 
 namespace Infrastructure.Data.Configurations;
 
@@ -10,12 +11,12 @@ public class CardConfiguration : IEntityTypeConfiguration<Card>
     {
         builder.HasKey(c => c.Id);
         
-        builder.Property(c => c.Title)
-            .IsRequired()
-            .HasMaxLength(200);
-            
-        builder.Property(c => c.Description)
-            .HasMaxLength(2000);
+        		builder.Property(c => c.Title)
+			.IsRequired()
+			.HasMaxLength(ValidationConstants.CardTitleMaxLength);
+			
+		builder.Property(c => c.Description)
+			.HasMaxLength(ValidationConstants.CardDescriptionMaxLength);
             
         builder.Property(c => c.RowVersion)
             .IsRowVersion();

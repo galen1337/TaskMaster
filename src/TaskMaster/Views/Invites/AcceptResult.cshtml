@@ -1,10 +1,44 @@
 @model bool
 
-@if (Model)
-{
-	<div class="alert alert-success">You have joined the project successfully.</div>
-}
-else
-{
-	<div class="alert alert-danger">Invite is invalid or expired.</div>
-} 
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body p-4 text-center">
+                @if (Model)
+                {
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill display-1 text-success"></i>
+                    </div>
+                    <h2 class="mb-3 text-success">Welcome to the team!</h2>
+                    <p class="text-muted mb-4">You have successfully joined the project.</p>
+                    
+                    <div class="d-grid">
+                        <a asp-controller="Projects" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-kanban-fill me-2"></i>
+                            Go to Projects
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-4">
+                        <i class="bi bi-x-circle-fill display-1 text-danger"></i>
+                    </div>
+                    <h2 class="mb-3 text-danger">Invalid Invite</h2>
+                    <p class="text-muted mb-4">This invite is invalid or has expired.</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Projects" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-kanban-fill me-2"></i>
+                            Go to Projects
+                        </a>
+                        <a asp-area="" asp-page="/About" class="btn btn-outline-secondary">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Learn More
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div> 

@@ -27,11 +27,11 @@ public class BoardService : IBoardService
 			.FirstOrDefaultAsync(b => b.Id == boardId);
 		if (board == null) return null;
 
-		bool isProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId);
-		if (!isProjectMember && !isPlatformAdmin && board.IsPrivate)
-		{
-			return null;
-		}
+			bool isProjectMember = await _db.ProjectMembers.AnyAsync(pm => pm.ProjectId == board.ProjectId && pm.UserId == currentUserId);
+	if (!isProjectMember && !isPlatformAdmin)
+	{
+		return null;
+	}
 
 		return board;
 	}
@@ -54,7 +54,7 @@ public class BoardService : IBoardService
 		{
 			ProjectId = projectId,
 			Name = dto.Name.Trim(),
-			IsPrivate = dto.IsPrivate,
+			IsPrivate = false,
 			CreatedAt = DateTime.UtcNow
 		};
 

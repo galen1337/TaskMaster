@@ -124,7 +124,7 @@
 	<div class="sidebar">
 		@if (User.Identity?.IsAuthenticated ?? false)
 		{
-			<a class="brand" asp-controller="Projects" asp-action="Index">
+			<a class="brand" asp-area="" asp-controller="Projects" asp-action="Index">
 				<i class="bi bi-kanban"></i> TaskMaster
 			</a>
 		}
@@ -139,7 +139,7 @@
 				<li class="nav-item">
 					@if (User.Identity?.IsAuthenticated ?? false)
 					{
-						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Projects" ? "active" : "")" asp-controller="Projects" asp-action="Index">
+						<a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Projects" ? "active" : "")" asp-area="" asp-controller="Projects" asp-action="Index">
 							<i class="bi bi-kanban-fill"></i>
 							<span>Projects</span>
 						</a>

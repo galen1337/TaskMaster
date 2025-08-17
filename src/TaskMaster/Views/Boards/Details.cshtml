@@ -91,7 +91,7 @@
 							});
 							if (!res.ok) throw new Error('Move failed');
 						} catch (e) {
-							alert('Could not move card.');
+							toast('error', 'Could not move card.');
 							location.reload();
 						}
 					}
@@ -121,7 +121,10 @@
 					const res = await fetch(`/Cards/CreateForm?boardId=${boardId}`, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
 					const html = await res.text();
 					body.innerHTML = html;
-				} catch { body.innerHTML = '<div class="alert alert-danger">Failed to load form.</div>'; }
+				} catch { 
+					body.innerHTML = '<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load form.</div>'; 
+					toast('error', 'Failed to load form.');
+				}
 			});
 		})();
 	</script>

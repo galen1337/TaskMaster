@@ -1,0 +1,26 @@
+Summary
+  Generated on: 8/17/2025 - 9:54:26 AM
+  Coverage date: 8/17/2025 - 9:37:26 AM - 8/17/2025 - 9:52:29 AM
+  Parser: MultiReport (2x Cobertura)
+  Assemblies: 1
+  Classes: 4
+  Files: 4
+  Line coverage: 96.8%
+  Covered lines: 247
+  Uncovered lines: 8
+  Coverable lines: 255
+  Total lines: 374
+  Branch coverage: 68.9% (80 of 116)
+  Covered branches: 80
+  Total branches: 116
+  Method coverage: 100% (17 of 17)
+  Full method coverage: 64.7% (11 of 17)
+  Covered methods: 17
+  Fully covered methods: 11
+  Total methods: 17
+
+Infrastructure                             96.8%
+  Infrastructure.Services.BoardService     93.7%
+  Infrastructure.Services.CardService      98.2%
+  Infrastructure.Services.InviteService      98%
+  Infrastructure.Services.ProjectService   95.8%

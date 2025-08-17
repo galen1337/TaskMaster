@@ -74,10 +74,22 @@
 											<p class="card-text text-muted small">Kanban Board</p>
 										</div>
 										<div class="card-footer bg-transparent">
-											<a class="btn btn-outline-primary btn-sm w-100" asp-controller="Boards" asp-action="Details" asp-route-id="@b.Id">
-												<i class="bi bi-arrow-right"></i> Open Board
+										<div class="d-flex gap-2">
+											<a class="btn btn-outline-primary btn-sm flex-fill" asp-controller="Boards" asp-action="Details" asp-route-id="@b.Id">
+												<i class="bi bi-arrow-right"></i> Open
 											</a>
+											@if ((bool)(ViewBag.CanManageProject ?? false))
+											{
+												<form asp-controller="Boards" asp-action="Delete" method="post" class="flex-fill">
+													@Html.AntiForgeryToken()
+													<input type="hidden" name="id" value="@b.Id" />
+													<button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Delete board @b.Name? This cannot be undone.');">
+														<i class="bi bi-trash"></i> Delete
+													</button>
+												</form>
+											}
 										</div>
+									</div>
 									</div>
 								</div>
 							}

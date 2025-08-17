@@ -1,0 +1,105 @@
+@page
+@model AboutModel
+@{
+    ViewData["Title"] = "About TaskMaster";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="text-center mb-5">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-kanban text-primary me-3"></i>
+                About TaskMaster
+            </h1>
+            <p class="lead text-muted">Your number one team project management system</p>
+        </div>
+
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3 class="mb-4 text-primary">
+                            <i class="bi bi-rocket-takeoff me-2"></i>
+                            Built for Modern Teams
+                        </h3>
+                        <p class="mb-4">
+                            TaskMaster is your number one team project management system designed to streamline collaboration 
+                            and boost productivity. Whether you're managing a small team or coordinating complex projects 
+                            across multiple departments, TaskMaster provides the tools you need to succeed.
+                        </p>
+
+                        <h4 class="mb-3 text-primary">
+                            <i class="bi bi-star me-2"></i>
+                            Key Features
+                        </h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Kanban Board Management
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Drag & Drop Interface
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Team Collaboration
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Project Organization
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Priority Management
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Real-time Updates
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3 text-primary">
+                            <i class="bi bi-people me-2"></i>
+                            Perfect for Any Team
+                        </h4>
+                        <p class="mb-4">
+                            From software development teams tracking sprint progress to marketing teams managing campaign deliverables, 
+                            TaskMaster adapts to your workflow. Our intuitive interface makes it easy for anyone to get started, 
+                            while powerful features ensure you can handle projects of any complexity.
+                        </p>
+
+                        <div class="text-center mt-5">
+                            @if (User.Identity?.IsAuthenticated ?? false)
+                            {
+                                <a asp-controller="Projects" asp-action="Index" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-arrow-right me-2"></i>
+                                    Go to Your Projects
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg me-3">
+                                    <i class="bi bi-person-plus me-2"></i>
+                                    Get Started Today
+                                </a>
+                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                                    Sign In
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

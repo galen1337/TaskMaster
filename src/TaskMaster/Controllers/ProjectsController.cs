@@ -144,4 +144,119 @@ public class ProjectsController : Controller
 		var items = await _projectService.GetUserProjectsAsync(userId);
 		return Json(items.Select(p => new { id = p.Id, name = p.Name }));
 	}
+
+	[HttpGet]
+	public async Task<IActionResult> Settings(int id)
+	{
+		string? userId = _userManager.GetUserId(User);
+		if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+		var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == id);
+		if (project == null) return NotFound();
+
+		// Check if user can manage project
+		var myRole = await _context.ProjectMembers
+			.Where(pm => pm.ProjectId == id && pm.UserId == userId)
+			.Select(pm => pm.Role)
+			.FirstOrDefaultAsync();
+		
+		bool isPlatformAdmin = User.IsInRole("Admin");
+		bool canManage = isPlatformAdmin || myRole == ProjectRole.Owner || myRole == ProjectRole.Admin;
+		
+		if (!canManage) return Forbid();
+
+		var viewModel = new ProjectSettingsViewModel
+		{
+			Id = project.Id,
+			Name = project.Name,
+			Description = project.Description
+		};
+
+		return View(viewModel);
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Settings(ProjectSettingsViewModel model)
+	{
+		string? userId = _userManager.GetUserId(User);
+		if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+		if (!ModelState.IsValid)
+		{
+			return View(model);
+		}
+
+		var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == model.Id);
+		if (project == null) return NotFound();
+
+		// Check permissions again
+		var myRole = await _context.ProjectMembers
+			.Where(pm => pm.ProjectId == model.Id && pm.UserId == userId)
+			.Select(pm => pm.Role)
+			.FirstOrDefaultAsync();
+		
+		bool isPlatformAdmin = User.IsInRole("Admin");
+		bool canManage = isPlatformAdmin || myRole == ProjectRole.Owner || myRole == ProjectRole.Admin;
+		
+		if (!canManage) return Forbid();
+
+		try
+		{
+			project.Name = model.Name;
+			project.Description = model.Description;
+			await _context.SaveChangesAsync();
+
+			TempData["Success"] = "Project settings updated successfully.";
+			return RedirectToAction(nameof(Details), new { id = project.Id });
+		}
+		catch (Exception ex)
+		{
+			ModelState.AddModelError("", $"Error updating project: {ex.Message}");
+			return View(model);
+		}
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Delete(int id)
+	{
+		string? userId = _userManager.GetUserId(User);
+		if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+		var project = await _context.Projects
+			.Include(p => p.Boards)
+				.ThenInclude(b => b.Columns)
+					.ThenInclude(c => c.Cards)
+			.Include(p => p.Members)
+			.FirstOrDefaultAsync(p => p.Id == id);
+		
+		if (project == null) return NotFound();
+
+		// Check if user can delete project (only owner or platform admin)
+		var myRole = await _context.ProjectMembers
+			.Where(pm => pm.ProjectId == id && pm.UserId == userId)
+			.Select(pm => pm.Role)
+			.FirstOrDefaultAsync();
+		
+		bool isPlatformAdmin = User.IsInRole("Admin");
+		bool canDelete = isPlatformAdmin || myRole == ProjectRole.Owner;
+		
+		if (!canDelete) return Forbid();
+
+		try
+		{
+			// Remove all related data (cascade delete should handle most of this)
+			_context.Projects.Remove(project);
+			await _context.SaveChangesAsync();
+
+			TempData["Success"] = "Project deleted successfully.";
+			return RedirectToAction(nameof(Index));
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = $"Error deleting project: {ex.Message}";
+			return RedirectToAction(nameof(Settings), new { id });
+		}
+	}
 } 

@@ -10,7 +10,7 @@
 			<tr>
 				<th>Name</th>
 				<th>Owner</th>
-				<th></th>
+				<th>Actions</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -20,9 +20,14 @@
 				<td>@p.Name</td>
 				<td>@p.Owner?.Email</td>
 				<td>
-					<a class="btn btn-primary btn-lg" asp-action="Details" asp-route-id="@p.Id">
-						Open <i class="bi bi-arrow-right"></i>
-					</a>
+					<div class="btn-group" role="group">
+						<a class="btn btn-primary" asp-action="Details" asp-route-id="@p.Id">
+							<i class="bi bi-arrow-right"></i> Open
+						</a>
+						<a class="btn btn-outline-secondary" asp-action="Settings" asp-route-id="@p.Id">
+							<i class="bi bi-gear"></i> Settings
+						</a>
+					</div>
 				</td>
 			</tr>
 		}

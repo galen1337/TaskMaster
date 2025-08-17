@@ -87,8 +87,17 @@
 			padding-right: 1rem;
 		}
 		
+		/* Ensure tables and other content don't overflow */
+		.table-responsive {
+			overflow-x: auto;
+		}
+		
+		.btn {
+			white-space: nowrap;
+		}
+		
 		/* Responsive design */
-		@media (max-width: 768px) {
+		@@media (max-width: 768px) {
 			.sidebar { 
 				width: 200px; 
 			}
@@ -99,7 +108,7 @@
 			}
 		}
 		
-		@media (max-width: 576px) {
+		@@media (max-width: 576px) {
 			.sidebar { 
 				width: 180px; 
 			}
@@ -108,15 +117,6 @@
 				width: calc(100vw - 180px);
 				max-width: calc(100vw - 180px);
 			}
-		}
-		
-		/* Ensure tables and other content don't overflow */
-		.table-responsive {
-			overflow-x: auto;
-		}
-		
-		.btn {
-			white-space: nowrap;
 		}
 	</style>
 </head>
@@ -160,11 +160,20 @@
 							<span>Inbox</span>
 						</a>
 					</li>
+					@if (User.IsInRole("Admin"))
+					{
+						<li class="nav-item">
+							<a class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Admin" && ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")" asp-area="Admin" asp-controller="Users" asp-action="Index">
+								<i class="bi bi-people-fill"></i>
+								<span>Manage Users</span>
+							</a>
+						</li>
+					}
 				}
 				<li class="nav-item">
-					<a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Privacy" ? "active" : "")" asp-area="" asp-page="/Privacy">
-						<i class="bi bi-shield-lock"></i>
-						<span>Privacy</span>
+					<a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/About" ? "active" : "")" asp-area="" asp-page="/About">
+						<i class="bi bi-info-circle"></i>
+						<span>About</span>
 					</a>
 				</li>
 			</ul>
@@ -179,7 +188,7 @@
 		</main>
 		<footer class="border-top footer text-muted">
 			<div class="container">
-				&copy; 2025 - TaskMaster - <a asp-area="" asp-page="/Privacy">Privacy</a>
+				&copy; 2025 - TaskMaster - <a asp-area="" asp-page="/About">About</a>
 			</div>
 		</footer>
 	</div>
@@ -190,16 +199,8 @@
 	<script src="~/js/site.js" asp-append-version="true"></script>
 
 	<script>
-		(function(){
-			const success = '@(TempData["Success"] as string)';
-			const error = '@(TempData["Error"] as string)';
-			if (success) {
-				Swal.fire({ toast: true, position: 'top-end', timer: 1500, timerProgressBar: true, icon: 'success', title: success, showConfirmButton: false });
-			}
-			if (error) {
-				Swal.fire({ toast: true, position: 'top-end', timer: 3500, timerProgressBar: true, icon: 'error', title: error, showConfirmButton: false });
-			}
-		})();
+		// Show TempData messages using site.js function
+		showTempDataMessages('@(TempData["Success"] as string)', '@(TempData["Error"] as string)');
 	</script>
 
 	@await RenderSectionAsync("Scripts", required: false)

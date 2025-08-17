@@ -59,9 +59,16 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Area routes (Admin, etc.)
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapRazorPages();
 
 // Add specific route for root to redirect to Projects
@@ -86,6 +93,7 @@ async Task SeedData(ApplicationDbContext context, UserManager<ApplicationUser> u
     if (!await roleManager.RoleExistsAsync("User"))
         await roleManager.CreateAsync(new IdentityRole("User"));
 
+    // Create multiple admin users
     ApplicationUser? adminUser = await userManager.FindByEmailAsync("admin@taskmaster.com");
     if (adminUser == null)
     {
@@ -93,12 +101,42 @@ async Task SeedData(ApplicationDbContext context, UserManager<ApplicationUser> u
         {
             UserName = "admin@taskmaster.com",
             Email = "admin@taskmaster.com",
-            FirstName = "Admin",
-            LastName = "User",
+            FirstName = "System",
+            LastName = "Administrator",
             EmailConfirmed = true
         };
         await userManager.CreateAsync(adminUser, "Admin123!");
         await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+
+    ApplicationUser? admin2 = await userManager.FindByEmailAsync("admin2@taskmaster.com");
+    if (admin2 == null)
+    {
+        admin2 = new ApplicationUser
+        {
+            UserName = "admin2@taskmaster.com",
+            Email = "admin2@taskmaster.com",
+            FirstName = "Sarah",
+            LastName = "Johnson",
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(admin2, "Admin123!");
+        await userManager.AddToRoleAsync(admin2, "Admin");
+    }
+
+    ApplicationUser? admin3 = await userManager.FindByEmailAsync("admin3@taskmaster.com");
+    if (admin3 == null)
+    {
+        admin3 = new ApplicationUser
+        {
+            UserName = "admin3@taskmaster.com",
+            Email = "admin3@taskmaster.com",
+            FirstName = "Michael",
+            LastName = "Chen",
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(admin3, "Admin123!");
+        await userManager.AddToRoleAsync(admin3, "Admin");
     }
 
     ApplicationUser? user1 = await userManager.FindByEmailAsync("john@taskmaster.com");

@@ -4,12 +4,7 @@
 
 <form asp-action="Create" method="post">
 	<div asp-validation-summary="All" class="text-danger"></div>
-	@if (ViewBag.Debug != null)
-	{
-		<div class="alert alert-info">
-			<strong>Debug:</strong> @ViewBag.Debug
-		</div>
-	}
+
 	<div class="mb-3">
 		<label asp-for="Name" class="form-label"></label>
 		<input asp-for="Name" class="form-control" />

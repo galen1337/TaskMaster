@@ -53,6 +53,16 @@
 		}
 	}
 
+	// Handle TempData messages from server
+	window.showTempDataMessages = function(success, error) {
+		if (success && success.trim()) {
+			toast('success', success);
+		}
+		if (error && error.trim()) {
+			toast('error', error);
+		}
+	};
+
 	function wireForms(scope) {
 		// Edit form
 		const editForm = scope.querySelector('form[action$="/Cards/Edit"]');

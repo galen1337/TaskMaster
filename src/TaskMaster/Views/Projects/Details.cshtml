@@ -1,104 +1,212 @@
 @model Domain.Entities.Project
 
-<h2>@Model.Name</h2>
-<p>@Model.Description</p>
-
-@if (TempData["Success"] is string s)
-{
-	<div class="alert alert-success">@s</div>
-}
-@if (TempData["Error"] is string e)
-{
-	<div class="alert alert-danger">@e</div>
+@{
+	ViewData["Title"] = Model.Name;
 }
 
-@if ((bool)(ViewBag.CanManageProject ?? false))
-{
-	<h4>Invite a member</h4>
-	<form asp-controller="Invites" asp-action="Send" method="post" class="row g-2 mb-4">
-		<input type="hidden" name="projectId" value="@Model.Id" />
-		<div class="col-auto">
-			<input type="email" name="email" class="form-control" placeholder="user@example.com" required />
+<div class="container-fluid">
+	<!-- Project Header -->
+	<div class="row mb-4">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-start">
+						<div>
+							<h1 class="card-title">@Model.Name</h1>
+							<p class="card-text text-muted">@Model.Description</p>
+						</div>
+						<div>
+							<a class="btn btn-outline-primary" asp-controller="DailyUpdates" asp-action="Project" asp-route-id="@Model.Id">
+								<i class="bi bi-journal-text"></i> Daily Updates
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
-		<div class="col-auto">
-			<button type="submit" class="btn btn-success">Send Invite</button>
-		</div>
-	</form>
-}
+	</div>
 
-<h4>Boards</h4>
-@if (Model.Boards.Any())
-{
-	<ul class="list-group mb-3">
-	@foreach (var b in Model.Boards.OrderBy(x => x.Name))
+	<!-- Invite Member Section -->
+	@if ((bool)(ViewBag.CanManageProject ?? false))
 	{
-		<li class="list-group-item d-flex justify-content-between align-items-center">
-			<span>@b.Name</span>
-			<a class="btn btn-sm btn-outline-primary" asp-controller="Boards" asp-action="Details" asp-route-id="@b.Id">Open</a>
-		</li>
-	}
-	</ul>
-}
-else
-{
-	<p>No boards yet.</p>
-}
-
-@if ((bool)(ViewBag.CanManageProject ?? false))
-{
-	<form asp-controller="Boards" asp-action="Create" method="post" class="row g-2 mb-4">
-		<input type="hidden" name="projectId" value="@Model.Id" />
-		<div class="col-auto">
-			<input type="text" name="Name" class="form-control" placeholder="Board name" required />
-		</div>
-		<div class="col-auto form-check align-self-center">
-			<input class="form-check-input" type="checkbox" name="IsPrivate" id="isPrivate" />
-			<label class="form-check-label" for="isPrivate">Private</label>
-		</div>
-		<div class="col-auto">
-			<button type="submit" class="btn btn-primary">Add Board</button>
-		</div>
-	</form>
-}
-
-<h4>Members</h4>
-@if (Model.Members.Any())
-{
-	<table class="table table-sm">
-		<thead>
-			<tr>
-				<th>User</th>
-				<th>Role</th>
-				<th>Change</th>
-			</tr>
-		</thead>
-		<tbody>
-		@foreach (var m in Model.Members)
-		{
-			<tr>
-				<td>@m.User.Email</td>
-				<td>@m.Role</td>
-				<td>
-					@if ((bool)(ViewBag.CanManageProject ?? false) && m.Role != Domain.Enums.ProjectRole.Owner)
-					{
-						<form asp-controller="Projects" asp-action="ChangeRole" method="post" class="d-flex gap-2">
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0"><i class="bi bi-person-plus"></i> Invite Member</h5>
+					</div>
+					<div class="card-body">
+						<form asp-controller="Invites" asp-action="Send" method="post" class="row g-3">
 							<input type="hidden" name="projectId" value="@Model.Id" />
-							<input type="hidden" name="userId" value="@m.UserId" />
-							<select name="role" class="form-select form-select-sm" style="max-width: 160px;">
-								<option value="Owner" selected="@(m.Role == Domain.Enums.ProjectRole.Owner)">Owner</option>
-								<option value="Admin" selected="@(m.Role == Domain.Enums.ProjectRole.Admin)">Admin</option>
-								<option value="Member" selected="@(m.Role == Domain.Enums.ProjectRole.Member)">Member</option>
-							</select>
-							<button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+							<div class="col-md-8">
+								<input type="email" name="email" class="form-control" placeholder="Enter email address" required />
+							</div>
+							<div class="col-md-4">
+								<button type="submit" class="btn btn-success w-100">
+									<i class="bi bi-send"></i> Send Invite
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+
+	<!-- Boards Section -->
+	<div class="row mb-4">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-header d-flex justify-content-between align-items-center">
+					<h5 class="mb-0"><i class="bi bi-kanban"></i> Boards</h5>
+					<span class="badge bg-primary">@Model.Boards.Count()</span>
+				</div>
+				<div class="card-body">
+					@if (Model.Boards.Any())
+					{
+						<div class="row">
+							@foreach (var b in Model.Boards.OrderBy(x => x.Name))
+							{
+								<div class="col-md-6 col-lg-4 mb-3">
+									<div class="card h-100 border-secondary">
+										<div class="card-body">
+											<h6 class="card-title">@b.Name</h6>
+											<p class="card-text text-muted small">Kanban Board</p>
+										</div>
+										<div class="card-footer bg-transparent">
+											<a class="btn btn-outline-primary btn-sm w-100" asp-controller="Boards" asp-action="Details" asp-route-id="@b.Id">
+												<i class="bi bi-arrow-right"></i> Open Board
+											</a>
+										</div>
+									</div>
+								</div>
+							}
+						</div>
+					}
+					else
+					{
+						<div class="text-center py-4">
+							<i class="bi bi-kanban text-muted" style="font-size: 3rem;"></i>
+							<p class="text-muted mt-2">No boards created yet.</p>
+						</div>
+					}
+
+					@if ((bool)(ViewBag.CanManageProject ?? false))
+					{
+						<hr class="my-4">
+						<h6 class="mb-3">Create New Board</h6>
+						<form asp-controller="Boards" asp-action="Create" method="post" class="row g-3">
+							<input type="hidden" name="projectId" value="@Model.Id" />
+							<div class="col-md-8">
+								<input type="text" name="Name" class="form-control" placeholder="Enter board name" required />
+							</div>
+							<div class="col-md-4">
+								<button type="submit" class="btn btn-primary w-100">
+									<i class="bi bi-plus-lg"></i> Create Board
+								</button>
+							</div>
 						</form>
 					}
-				</td>
-			</tr>
-		}
-		</tbody>
-	</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Members Section -->
+	<div class="row mb-4">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-header d-flex justify-content-between align-items-center">
+					<h5 class="mb-0"><i class="bi bi-people"></i> Team Members</h5>
+					<span class="badge bg-info">@Model.Members.Count()</span>
+				</div>
+				<div class="card-body">
+					@if (Model.Members.Any())
+					{
+						<div class="table-responsive">
+							<table class="table table-hover mb-0">
+								<thead class="table-light">
+									<tr>
+										<th><i class="bi bi-person"></i> User</th>
+										<th><i class="bi bi-shield"></i> Role</th>
+										<th><i class="bi bi-gear"></i> Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var m in Model.Members)
+									{
+										<tr>
+											<td>
+												<div class="d-flex align-items-center">
+													<div class="avatar-circle me-2">
+														@(m.User.Email?.Substring(0, 1).ToUpper() ?? "?")
+													</div>
+													<div>
+														<div class="fw-medium">@m.User.Email</div>
+														<small class="text-muted">@m.User.FirstName @m.User.LastName</small>
+													</div>
+												</div>
+											</td>
+											<td>
+												<span class="badge bg-@(m.Role == Domain.Enums.ProjectRole.Owner ? "success" : m.Role == Domain.Enums.ProjectRole.Admin ? "primary" : "secondary")">
+													@m.Role
+												</span>
+											</td>
+											<td>
+												@if ((bool)(ViewBag.CanManageProject ?? false) && m.Role != Domain.Enums.ProjectRole.Owner)
+												{
+													<form asp-controller="Projects" asp-action="ChangeRole" method="post" class="d-flex gap-2 align-items-center">
+														<input type="hidden" name="projectId" value="@Model.Id" />
+														<input type="hidden" name="userId" value="@m.UserId" />
+														<select name="role" class="form-select form-select-sm" style="max-width: 140px;">
+															<option value="Owner" selected="@(m.Role == Domain.Enums.ProjectRole.Owner)">Owner</option>
+															<option value="Admin" selected="@(m.Role == Domain.Enums.ProjectRole.Admin)">Admin</option>
+															<option value="Member" selected="@(m.Role == Domain.Enums.ProjectRole.Member)">Member</option>
+														</select>
+														<button type="submit" class="btn btn-sm btn-outline-primary">
+															<i class="bi bi-check2"></i>
+														</button>
+													</form>
+												}
+												else if (m.Role == Domain.Enums.ProjectRole.Owner)
+												{
+													<small class="text-muted">Project Owner</small>
+												}
+												else
+												{
+													<small class="text-muted">No permissions</small>
+												}
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+					else
+					{
+						<div class="text-center py-4">
+							<i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+							<p class="text-muted mt-2">No team members yet.</p>
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.avatar-circle {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #007bff, #0056b3);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	font-size: 16px;
 }
-else
-{
-	<p>No members yet.</p>
-} 
+</style> 

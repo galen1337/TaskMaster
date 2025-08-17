@@ -1,0 +1,82 @@
+@model List<Domain.Entities.DailyUpdate>
+@{
+	ViewData["Title"] = $"Daily Updates - {ViewBag.Project?.Name}";
+}
+
+<div class="container">
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2>@ViewData["Title"]</h2>
+		<a class="btn btn-outline-secondary" asp-controller="Projects" asp-action="Details" asp-route-id="@ViewBag.ProjectId">
+			<i class="bi bi-arrow-left"></i> Back to Project
+		</a>
+	</div>
+
+
+	<div class="card mb-4">
+		<div class="card-header">Post your daily update</div>
+		<div class="card-body">
+			<form asp-controller="DailyUpdates" asp-action="Create" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
+				<div class="mb-3">
+					<textarea name="content" class="form-control" rows="3" placeholder="What did you do today?" maxlength="2000"></textarea>
+					<div class="form-text">Max 2000 characters. Markdown/HTML is not rendered; text only.</div>
+				</div>
+				<button type="submit" class="btn btn-primary">Post Update</button>
+			</form>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header">Recent updates</div>
+		<div class="list-group list-group-flush">
+			@if (!Model.Any())
+			{
+				<div class="list-group-item text-muted">No updates yet.</div>
+			}
+			else
+			{
+				@foreach (var u in Model)
+				{
+					<div class="list-group-item">
+						<div class="d-flex justify-content-between">
+							<strong>@(u.Author?.Email ?? u.AuthorId)</strong>
+							<small class="text-muted">@u.CreatedAt.ToLocalTime().ToString("g")</small>
+						</div>
+						<div class="mt-1" style="white-space: pre-wrap;">@Html.Encode(u.Content)</div>
+					</div>
+				}
+			}
+		</div>
+		@if (ViewBag.TotalPages > 1)
+		{
+			<nav class="card-footer" aria-label="Updates pagination">
+				<ul class="pagination justify-content-center mb-0">
+					@if (ViewBag.CurrentPage > 1)
+					{
+						<li class="page-item">
+							<a class="page-link" asp-action="Project" asp-route-id="@ViewBag.ProjectId" asp-route-page="@(ViewBag.CurrentPage - 1)">Previous</a>
+						</li>
+					}
+					@for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+					{
+						<li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+							<a class="page-link" asp-action="Project" asp-route-id="@ViewBag.ProjectId" asp-route-page="@i">@i</a>
+						</li>
+					}
+					@if (ViewBag.CurrentPage < ViewBag.TotalPages)
+					{
+						<li class="page-item">
+							<a class="page-link" asp-action="Project" asp-route-id="@ViewBag.ProjectId" asp-route-page="@(ViewBag.CurrentPage + 1)">Next</a>
+						</li>
+					}
+				</ul>
+			</nav>
+		}
+	</div>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+
+} 
